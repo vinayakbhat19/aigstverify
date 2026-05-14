@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>GST Report</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>AI GST Report</h1>
+
+        <h2>OCR Text</h2>
+
+        <p>
+            {{ report["ocr_text"] }}
+        </p>
+
+        <h2>Invoice Details</h2>
+
+        <pre>
+{{ report["invoice"] }}
+</pre>
+
+        <h2>GST Validation</h2>
+
+        <pre>
+{{ report["gst_validation"] }}
+</pre>
+
+        <h2>GST API</h2>
+
+        <pre>
+{{ report["gst_api"] }}
+</pre>
+
+        <h2>Product Analysis</h2>
+
+        <pre>
+{{ report["product_analysis"] }}
+</pre>
+
+        <h2>GST Rule Check</h2>
+
+        <p>
+            {{ report["gst_rule_check"] }}
+        </p>
+
+        <h2>Fraud Analysis</h2>
+
+        <pre>
+{{ report["fraud_analysis"] }}
+</pre>
+
+    </div>
+
+</body>
+
+</html>

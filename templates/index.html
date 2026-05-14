@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>GSTVision AI</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial;
+        }
+
+        body {
+
+            background: #f4f7fb;
+
+            min-height: 100vh;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+
+            padding: 30px;
+        }
+
+        .container {
+
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .hero {
+
+            background: linear-gradient(135deg,
+                    #111827,
+                    #2563eb);
+
+            border-radius: 25px;
+
+            padding: 50px;
+
+            color: white;
+
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .hero h1 {
+
+            font-size: 55px;
+
+            margin-bottom: 15px;
+        }
+
+        .hero p {
+
+            font-size: 18px;
+
+            opacity: 0.9;
+
+            margin-bottom: 40px;
+        }
+
+        .upload-box {
+
+            background: white;
+
+            padding: 40px;
+
+            border-radius: 20px;
+
+            color: black;
+        }
+
+        .upload-area {
+
+            border: 3px dashed #2563eb;
+
+            border-radius: 20px;
+
+            padding: 50px;
+
+            text-align: center;
+
+            margin-bottom: 25px;
+
+            transition: 0.3s;
+        }
+
+        .upload-area:hover {
+
+            background: #eff6ff;
+        }
+
+        .upload-icon {
+
+            font-size: 70px;
+
+            margin-bottom: 20px;
+        }
+
+        input[type=file] {
+
+            font-size: 18px;
+        }
+
+        .analyze-btn {
+
+            width: 100%;
+
+            padding: 18px;
+
+            border: none;
+
+            border-radius: 15px;
+
+            background: #2563eb;
+
+            color: white;
+
+            font-size: 20px;
+
+            cursor: pointer;
+
+            transition: 0.3s;
+        }
+
+        .analyze-btn:hover {
+
+            background: #1d4ed8;
+        }
+
+        .features {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(auto-fit, minmax(220px, 1fr));
+
+            gap: 20px;
+
+            margin-top: 35px;
+        }
+
+        .feature-card {
+
+            background: white;
+
+            padding: 25px;
+
+            border-radius: 18px;
+
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+
+            text-align: center;
+        }
+
+        .feature-card h3 {
+
+            margin-top: 15px;
+
+            margin-bottom: 10px;
+
+            color: #111827;
+        }
+
+        .feature-card p {
+
+            color: #6b7280;
+        }
+
+        .stats {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(auto-fit, minmax(200px, 1fr));
+
+            gap: 20px;
+
+            margin-top: 30px;
+        }
+
+        .stat {
+
+            background: rgba(255, 255, 255, 0.15);
+
+            padding: 25px;
+
+            border-radius: 18px;
+
+            text-align: center;
+        }
+
+        .stat h2 {
+
+            font-size: 40px;
+        }
+
+        .stat p {
+
+            opacity: 0.9;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="hero">
+
+            <h1>GSTVision AI</h1>
+
+            <p>
+
+                AI-Powered GST Invoice Fraud Detection
+                & Compliance Verification System
+
+            </p>
+
+            <div class="upload-box">
+
+                <form action="/upload" method="post" enctype="multipart/form-data">
+
+                    <div class="upload-area">
+
+                        <div class="upload-icon">
+                            📄
+                        </div>
+
+                        <h2>
+                            Upload GST Invoice
+                        </h2>
+
+                        <br>
+
+                        <input type="file" name="file" required>
+
+                    </div>
+
+                    <button class="analyze-btn" type="submit">
+
+                        Analyze Invoice
+
+                    </button>
+
+                </form>
+
+            </div>
+
+            <div class="stats">
+
+                <div class="stat">
+
+                    <h2>99%</h2>
+
+                    <p>GST Accuracy</p>
+
+                </div>
+
+                <div class="stat">
+
+                    <h2>AI</h2>
+
+                    <p>Fraud Detection</p>
+
+                </div>
+
+                <div class="stat">
+
+                    <h2>24/7</h2>
+
+                    <p>Invoice Validation</p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="features">
+
+            <div class="feature-card">
+
+                <h3>OCR Invoice Scanning</h3>
+
+                <p>
+
+                    Extract invoice details automatically.
+
+                </p>
+
+            </div>
+
+            <div class="feature-card">
+
+                <h3>GST Verification</h3>
+
+                <p>
+
+                    Validate GST numbers using API.
+
+                </p>
+
+            </div>
+
+            <div class="feature-card">
+
+                <h3>Fraud Detection AI</h3>
+
+                <p>
+
+                    Detect fake invoices with XGBoost AI.
+
+                </p>
+
+            </div>
+
+            <div class="feature-card">
+
+                <h3>GST Rule Validation</h3>
+
+                <p>
+
+                    Verify GST percentages automatically.
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
