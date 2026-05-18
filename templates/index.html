@@ -7,342 +7,277 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>GSTVision AI</title>
+    <title>
+        GSTVision AI
+    </title>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial;
-        }
-
-        body {
-
-            background: #f4f7fb;
-
-            min-height: 100vh;
-
-            display: flex;
-
-            justify-content: center;
-
-            align-items: center;
-
-            padding: 30px;
-        }
-
-        .container {
-
-            width: 100%;
-            max-width: 1100px;
-        }
-
-        .hero {
-
-            background: linear-gradient(135deg,
-                    #111827,
-                    #2563eb);
-
-            border-radius: 25px;
-
-            padding: 50px;
-
-            color: white;
-
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-        }
-
-        .hero h1 {
-
-            font-size: 55px;
-
-            margin-bottom: 15px;
-        }
-
-        .hero p {
-
-            font-size: 18px;
-
-            opacity: 0.9;
-
-            margin-bottom: 40px;
-        }
-
-        .upload-box {
-
-            background: white;
-
-            padding: 40px;
-
-            border-radius: 20px;
-
-            color: black;
-        }
-
-        .upload-area {
-
-            border: 3px dashed #2563eb;
-
-            border-radius: 20px;
-
-            padding: 50px;
-
-            text-align: center;
-
-            margin-bottom: 25px;
-
-            transition: 0.3s;
-        }
-
-        .upload-area:hover {
-
-            background: #eff6ff;
-        }
-
-        .upload-icon {
-
-            font-size: 70px;
-
-            margin-bottom: 20px;
-        }
-
-        input[type=file] {
-
-            font-size: 18px;
-        }
-
-        .analyze-btn {
-
-            width: 100%;
-
-            padding: 18px;
-
-            border: none;
-
-            border-radius: 15px;
-
-            background: #2563eb;
-
-            color: white;
-
-            font-size: 20px;
-
-            cursor: pointer;
-
-            transition: 0.3s;
-        }
-
-        .analyze-btn:hover {
-
-            background: #1d4ed8;
-        }
-
-        .features {
-
-            display: grid;
-
-            grid-template-columns:
-                repeat(auto-fit, minmax(220px, 1fr));
-
-            gap: 20px;
-
-            margin-top: 35px;
-        }
-
-        .feature-card {
-
-            background: white;
-
-            padding: 25px;
-
-            border-radius: 18px;
-
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-
-            text-align: center;
-        }
-
-        .feature-card h3 {
-
-            margin-top: 15px;
-
-            margin-bottom: 10px;
-
-            color: #111827;
-        }
-
-        .feature-card p {
-
-            color: #6b7280;
-        }
-
-        .stats {
-
-            display: grid;
-
-            grid-template-columns:
-                repeat(auto-fit, minmax(200px, 1fr));
-
-            gap: 20px;
-
-            margin-top: 30px;
-        }
-
-        .stat {
-
-            background: rgba(255, 255, 255, 0.15);
-
-            padding: 25px;
-
-            border-radius: 18px;
-
-            text-align: center;
-        }
-
-        .stat h2 {
-
-            font-size: 40px;
-        }
-
-        .stat p {
-
-            opacity: 0.9;
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 </head>
+<!-- AI LOADER -->
+
+<div id="loader-screen" class="loader-screen">
+
+    <div class="loader-card">
+
+        <div class="ai-spinner"></div>
+
+        <h2>
+            GSTVision AI
+        </h2>
+
+        <p id="loader-text">
+            Analyzing Invoice...
+        </p>
+
+        <div class="loader-progress">
+
+            <div class="loader-bar"></div>
+
+        </div>
+
+    </div>
+
+</div>
 
 <body>
 
-    <div class="container">
+    <div class="background-glow"></div>
 
-        <div class="hero">
+    <div class="hero">
 
-            <h1>GSTVision AI</h1>
+        <div class="hero-left">
+
+            <div class="logo-badge">
+                AI Powered GST Security
+            </div>
+
+            <h1>
+                GSTVision AI
+            </h1>
 
             <p>
-
-                AI-Powered GST Invoice Fraud Detection
-                & Compliance Verification System
-
+                Intelligent GST Invoice Fraud Detection,
+                AI Compliance Verification & Financial
+                Risk Analysis Platform.
             </p>
 
-            <div class="upload-box">
+            <div class="hero-buttons">
 
-                <form action="/upload" method="post" enctype="multipart/form-data">
+                <button class="primary-btn">
+                    AI Fraud Detection
+                </button>
 
-                    <div class="upload-area">
-
-                        <div class="upload-icon">
-                            📄
-                        </div>
-
-                        <h2>
-                            Upload GST Invoice
-                        </h2>
-
-                        <br>
-
-                        <input type="file" name="file" required>
-
-                    </div>
-
-                    <button class="analyze-btn" type="submit">
-
-                        Analyze Invoice
-
-                    </button>
-
-                </form>
+                <button class="secondary-btn">
+                    GST Verification Engine
+                </button>
 
             </div>
 
-            <div class="stats">
+            <div class="stats-grid">
 
-                <div class="stat">
-
-                    <h2>99%</h2>
-
-                    <p>GST Accuracy</p>
-
+                <div class="stat-card">
+                    <h2>15K+</h2>
+                    <p>Invoices Analyzed</p>
                 </div>
 
-                <div class="stat">
-
-                    <h2>AI</h2>
-
-                    <p>Fraud Detection</p>
-
+                <div class="stat-card">
+                    <h2>Gemini AI</h2>
+                    <p>Invoice Intelligence</p>
                 </div>
 
-                <div class="stat">
-
-                    <h2>24/7</h2>
-
-                    <p>Invoice Validation</p>
-
+                <div class="stat-card">
+                    <h2>XGBoost</h2>
+                    <p>Fraud Risk Engine</p>
                 </div>
 
             </div>
 
         </div>
 
-        <div class="features">
+        <div class="hero-right">
 
-            <div class="feature-card">
+            <div class="dashboard-preview">
 
-                <h3>OCR Invoice Scanning</h3>
+                <div class="mini-card fraud-card">
 
-                <p>
+                    <div class="ring-wrap">
 
-                    Extract invoice details automatically.
+                        <svg width="180" height="180">
 
-                </p>
+                            <circle cx="90" cy="90" r="70" stroke="#1f2937" stroke-width="15" fill="none" />
 
-            </div>
+                            <circle cx="90" cy="90" r="70" stroke="#10b981" stroke-width="15" fill="none"
+                                stroke-dasharray="440" stroke-dashoffset="90" stroke-linecap="round"
+                                transform="rotate(-90 90 90)" />
 
-            <div class="feature-card">
+                            <text x="50%" y="50%" text-anchor="middle" dy="10" class="ring-text">
+                                LOW
+                            </text>
 
-                <h3>GST Verification</h3>
+                        </svg>
 
-                <p>
+                    </div>
 
-                    Validate GST numbers using API.
+                    <h3>
+                        AI Fraud Risk
+                    </h3>
 
-                </p>
+                    <p>
+                        Multi-Layer GST Validation
+                    </p>
 
-            </div>
+                </div>
 
-            <div class="feature-card">
+                <div class="floating-card glass-card">
 
-                <h3>Fraud Detection AI</h3>
+                    <div class="status-row">
+                        <span>GST Validation</span>
+                        <span class="green-dot"></span>
+                    </div>
 
-                <p>
+                    <div class="status-row">
+                        <span>Invoice OCR</span>
+                        <span class="green-dot"></span>
+                    </div>
 
-                    Detect fake invoices with XGBoost AI.
+                    <div class="status-row">
+                        <span>Fraud Detection</span>
+                        <span class="green-dot"></span>
+                    </div>
 
-                </p>
+                    <div class="status-row">
+                        <span>AI Confidence</span>
+                        <span class="blue-badge">98%</span>
+                    </div>
 
-            </div>
-
-            <div class="feature-card">
-
-                <h3>GST Rule Validation</h3>
-
-                <p>
-
-                    Verify GST percentages automatically.
-
-                </p>
+                </div>
 
             </div>
 
         </div>
 
     </div>
+
+    <div class="upload-section glass-panel">
+
+        <div class="upload-box">
+
+            <div class="upload-icon">
+                ⬆
+            </div>
+
+            <h2>
+                Upload GST Invoice
+            </h2>
+
+            <p>
+                PNG • JPG • PDF Supported
+            </p>
+
+            <form action="/upload" method="post" enctype="multipart/form-data">
+
+                <input type="file" name="file" required>
+
+                <button type="submit" class="analyze-btn">
+                    Analyze Invoice
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <div class="tech-stack glass-panel">
+
+        <h2>
+            Powered By
+        </h2>
+
+        <div class="tech-grid">
+
+            <div class="tech-item">
+                Gemini AI
+            </div>
+
+            <div class="tech-item">
+                FastAPI
+            </div>
+
+            <div class="tech-item">
+                EasyOCR
+            </div>
+
+            <div class="tech-item">
+                XGBoost
+            </div>
+
+            <div class="tech-item">
+                SQLite
+            </div>
+
+            <div class="tech-item">
+                ReportLab
+            </div>
+
+        </div>
+
+    </div>
+    <script>
+
+        const form = document.querySelector("form");
+
+        const loaderScreen = document.getElementById(
+            "loader-screen"
+        );
+
+        const loaderText = document.getElementById(
+            "loader-text"
+        );
+
+        const messages = [
+
+            "Analyzing Invoice...",
+
+            "Extracting GST Details...",
+
+            "Running OCR Engine...",
+
+            "Verifying GSTIN...",
+
+            "Running Fraud Detection...",
+
+            "Generating AI Report..."
+        ];
+
+        let index = 0;
+
+        setInterval(() => {
+
+            loaderText.innerText =
+                messages[index];
+
+            index = (
+                index + 1
+            ) % messages.length;
+
+        }, 1800);
+
+        form.addEventListener(
+
+            "submit",
+
+            () => {
+
+                loaderScreen.style.display =
+                    "flex";
+            }
+        );
+
+    </script>
 
 </body>
 

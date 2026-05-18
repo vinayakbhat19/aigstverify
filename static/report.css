@@ -1,0 +1,322 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* BODY */
+
+body {
+    background: #0f172a;
+    padding: 30px;
+    transition: 0.4s;
+    color: white;
+    min-height: 100vh;
+}
+
+/* HEADER */
+
+.header {
+
+    background: linear-gradient(135deg,
+            #0f172a,
+            #2563eb);
+
+    color: white;
+
+    padding: 40px;
+
+    border-radius: 28px;
+
+    margin-bottom: 30px;
+
+    box-shadow:
+        0 10px 30px rgba(37, 99, 235, 0.25);
+}
+
+.header h1 {
+    font-size: 48px;
+    margin-bottom: 12px;
+    font-weight: bold;
+}
+
+.header p {
+    color: #cbd5e1;
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+/* GRID */
+
+.grid {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1.2fr 1fr;
+
+    gap: 24px;
+
+    align-items: start;
+}
+
+/* CARD */
+
+.card {
+
+    background: #1f2937;
+
+    padding: 28px;
+
+    border-radius: 25px;
+
+    box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.25);
+
+    color: white;
+
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+}
+
+.card h2 {
+    margin-bottom: 28px;
+    font-size: 34px;
+    font-weight: bold;
+}
+
+/* DETAILS */
+
+.item {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 16px 0;
+
+    border-bottom:
+        1px solid rgba(255, 255, 255, 0.12);
+
+    font-size: 16px;
+
+    gap: 20px;
+}
+
+.item span:first-child {
+    color: #cbd5e1;
+    font-weight: 600;
+}
+
+.item span:last-child {
+    text-align: right;
+    max-width: 55%;
+    word-break: break-word;
+}
+
+/* BUTTON */
+
+button {
+    background: #2563eb;
+
+    color: white;
+
+    border: none;
+
+    padding: 15px 20px;
+
+    border-radius: 14px;
+
+    cursor: pointer;
+
+    width: 100%;
+
+    font-size: 16px;
+
+    font-weight: bold;
+
+    margin-top: 24px;
+
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+}
+
+/* FRAUD METER */
+
+.gauge-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    margin-bottom: 35px;
+}
+
+.gauge {
+
+    width: 260px;
+    height: 260px;
+
+    border-radius: 50%;
+
+    background:
+        conic-gradient(#ef4444 calc(var(--score) * 1%),
+            #334155 0);
+
+    position: relative;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    box-shadow:
+        0 0 25px rgba(239, 68, 68, 0.25);
+}
+
+.gauge::before {
+
+    content: '';
+
+    position: absolute;
+
+    width: 190px;
+    height: 190px;
+
+    background: #1f2937;
+
+    border-radius: 50%;
+}
+
+.gauge-text {
+
+    position: absolute;
+
+    z-index: 2;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+}
+
+.gauge-text h1 {
+
+    font-size: 42px;
+
+    color: white;
+
+    font-weight: 700;
+}
+
+.gauge-text p {
+
+    color: #94a3b8;
+
+    margin-top: 6px;
+
+    font-size: 16px;
+}
+
+/* STATUS BOX */
+
+.status-box {
+
+    margin-top: 30px;
+
+    background: #111827;
+
+    border-radius: 18px;
+
+    padding: 20px;
+}
+
+.status-item {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 18px;
+
+    font-size: 16px;
+}
+
+.status-item:last-child {
+    margin-bottom: 0;
+}
+
+/* STATUS COLORS */
+
+.success {
+    color: #22c55e;
+    font-weight: bold;
+}
+
+.warning {
+    color: #facc15;
+    font-weight: bold;
+}
+
+.danger {
+    color: #ef4444;
+    font-weight: bold;
+}
+
+/* IMAGE */
+
+.invoice-image {
+
+    width: 100%;
+
+    border-radius: 18px;
+
+    margin-top: 15px;
+
+    background: white;
+
+    padding: 10px;
+
+    object-fit: contain;
+}
+
+/* MOBILE */
+
+@media(max-width:1200px) {
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .header h1 {
+        font-size: 38px;
+    }
+
+    .card h2 {
+        font-size: 28px;
+    }
+
+    .gauge {
+        width: 220px;
+        height: 220px;
+    }
+
+    .gauge::before {
+        width: 160px;
+        height: 160px;
+    }
+
+    .gauge-text h1 {
+        font-size: 34px;
+    }
+}

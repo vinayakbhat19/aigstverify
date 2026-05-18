@@ -1,61 +1,177 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 
-    <title>GST Report</title>
+    <meta charset="UTF-8">
 
-    <link rel="stylesheet" href="/static/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>GSTVision AI Report</title>
+
+    <link rel="stylesheet" href="/static/report.css">
 
 </head>
 
-<body>
+<body class="dark">
 
-    <div class="container">
+    <div class="header">
 
-        <h1>AI GST Report</h1>
-
-        <h2>OCR Text</h2>
+        <h1>GSTVision AI Report</h1>
 
         <p>
-            {{ report["ocr_text"] }}
+            AI-Powered GST Invoice Fraud Detection &
+            Compliance Verification
         </p>
 
-        <h2>Invoice Details</h2>
+    </div>
 
-        <pre>
-{{ report["invoice"] }}
-</pre>
+    <div class="grid">
 
-        <h2>GST Validation</h2>
+        <!-- FRAUD METER -->
 
-        <pre>
-{{ report["gst_validation"] }}
-</pre>
+        <div class="card">
 
-        <h2>GST API</h2>
+            <h2>AI Fraud Meter</h2>
 
-        <pre>
-{{ report["gst_api"] }}
-</pre>
+            <div class="gauge-container">
 
-        <h2>Product Analysis</h2>
+                <div class="gauge" style="--score: {{ fraud_score }}">
 
-        <pre>
-{{ report["product_analysis"] }}
-</pre>
+                    <div class="gauge-text">
 
-        <h2>GST Rule Check</h2>
+                        <h1>{{ fraud_score }}%</h1>
 
-        <p>
-            {{ report["gst_rule_check"] }}
-        </p>
+                        <p>Fraud Risk</p>
 
-        <h2>Fraud Analysis</h2>
+                    </div>
 
-        <pre>
-{{ report["fraud_analysis"] }}
-</pre>
+                </div>
+
+            </div>
+
+            <div class="status-box">
+
+                <div class="status-item">
+
+                    <span>GST Verified</span>
+
+                    <span class="success">
+                        ✔ VERIFIED
+                    </span>
+
+                </div>
+
+                <div class="status-item">
+
+                    <span>GSTIN Status</span>
+
+                    <span class="success">
+                        ✔ ACTIVE
+                    </span>
+
+                </div>
+
+                <div class="status-item">
+
+                    <span>Fraud Status</span>
+
+                    <span class="
+                    {% if fraud_score > 70 %}
+                        danger
+                    {% elif fraud_score > 40 %}
+                        warning
+                    {% else %}
+                        success
+                    {% endif %}
+                    ">
+
+                        {% if fraud_score > 70 %}
+                        HIGH RISK
+                        {% elif fraud_score > 40 %}
+                        SUSPICIOUS
+                        {% else %}
+                        SAFE
+                        {% endif %}
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- INVOICE DETAILS -->
+
+        <div class="card">
+
+            <h2>Invoice Details</h2>
+
+            <div class="item">
+                <span>Vendor</span>
+                <span>{{ report["invoice"]["vendor"] }}</span>
+            </div>
+
+            <div class="item">
+                <span>GSTIN</span>
+                <span>{{ report["invoice"]["gstin"] }}</span>
+            </div>
+
+            <div class="item">
+                <span>Invoice Number</span>
+                <span>{{ report["invoice"]["invoice_number"] }}</span>
+            </div>
+
+            <div class="item">
+                <span>Total Amount</span>
+                <span>₹ {{ report["invoice"]["total"] }}</span>
+            </div>
+
+            <div class="item">
+                <span>GST Validation</span>
+                <span>{{ report["gst_validation"] }}</span>
+            </div>
+
+            <div class="item">
+                <span>GST API</span>
+                <span>{{ report["gst_api"] }}</span>
+            </div>
+
+            <div class="item">
+                <span>GST Rule Check</span>
+                <span>{{ report["gst_rule_check"] }}</span>
+            </div>
+
+            <div class="item">
+                <span>Fraud Analysis</span>
+                <span>{{ report["fraud_analysis"] }}</span>
+            </div>
+
+            <br>
+
+            <form action="/generate-report" method="POST">
+                <input
+                    type="hidden"
+                    name="invoice_key"
+                    value="{{ invoice_key }}"
+                >
+                <button type="submit">
+                    Download PDF Report
+                </button>
+            </form>
+
+        </div>
+
+        <!-- INVOICE PREVIEW -->
+
+        <div class="card">
+
+            <h2>Invoice Preview</h2>
+
+            <img src="/{{ image_path }}" class="invoice-image">
+
+        </div>
 
     </div>
 

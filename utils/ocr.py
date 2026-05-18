@@ -21,11 +21,11 @@ reader = easyocr.Reader(
 
 def preprocess_image(image):
 
-    # PIL IMAGE -> NUMPY
+    # PIL → NUMPY
 
     img = np.array(image)
 
-    # RGB -> GRAY
+    # RGB → GRAY
 
     gray = cv2.cvtColor(
 
@@ -35,16 +35,52 @@ def preprocess_image(image):
     )
 
     # =====================================
-    # SHARPEN IMAGE
+    # ENLARGE IMAGE
+    # =====================================
+
+    height, width = gray.shape
+
+    if width > 1200:
+
+        scale = 1200 / width
+
+        gray = cv2.resize(
+
+            gray,
+
+            None,
+
+            fx=scale,
+
+            fy=scale,
+
+            interpolation=cv2.INTER_AREA
+        )
+
+    # =====================================
+    # REMOVE NOISE
+    # =====================================
+
+    gray = cv2.GaussianBlur(
+
+        gray,
+
+        (3, 3),
+
+        0
+    )
+
+    # =====================================
+    # SHARPEN
     # =====================================
 
     sharpen_kernel = np.array([
 
-        [-1,-1,-1],
+        [-1, -1, -1],
 
-        [-1, 9,-1],
+        [-1,  9, -1],
 
-        [-1,-1,-1]
+        [-1, -1, -1]
 
     ])
 
@@ -61,21 +97,25 @@ def preprocess_image(image):
     # THRESHOLD
     # =====================================
 
-    thresh = cv2.threshold(
+    processed = cv2.adaptiveThreshold(
 
         sharpen,
 
-        150,
-
         255,
 
-        cv2.THRESH_BINARY
-    )[1]
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
 
-    return thresh
+        cv2.THRESH_BINARY,
+
+        11,
+
+        2
+    )
+
+    return processed
 
 # =========================================
-# OCR TEXT EXTRACTION
+# OCR EXTRACTION
 # =========================================
 
 def extract_text(image):
@@ -89,13 +129,13 @@ def extract_text(image):
         processed,
 
         detail=0,
-
-        paragraph=True
+        paragraph=False,
+        batch_size=1
     )
 
     text = "\n".join(results)
 
-    # DEBUG PRINT
+    # DEBUG
 
     print("\n===== OCR TEXT =====\n")
 
