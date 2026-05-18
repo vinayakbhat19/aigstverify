@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+google-generativeai
+pytesseract
+Pillow
+scikit-learn
+pandas
+numpy
+python-multipart
+jinja2
+reportlab
+requests
+joblib
