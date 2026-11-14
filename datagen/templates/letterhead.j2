@@ -1,0 +1,40 @@
+{% extends "_base.j2" %}
+{% block css %}
+.lh { border-bottom: 3px double {{ S.accent }}; padding-bottom: 10px; margin-bottom: 18px; {% if S.center %}text-align: center;{% endif %} }
+.lh h1 { font-size: {{ S.size * 2 }}px; color: {{ S.accent }}; }
+.ttl { text-align: center; font-size: {{ S.size * 1.3 }}px; font-weight: bold; text-decoration: underline; margin-bottom: 16px; }
+.items td, .items th { border: 1px solid {{ S.line }}; padding: 7px 8px; }
+.items .cap { text-align: right; }
+{% endblock %}
+{% block body %}
+<div class="lh">
+  <h1>{{ f('VENDOR_NAME', inv.vendor.name) }}</h1>
+  <div>{{ inv.vendor.line1 }}, {{ inv.vendor.line2 }}</div>
+  <div>Tel{{ L.sep }} {{ inv.vendor.phone }} | {{ inv.vendor.email }}</div>
+</div>
+<div class="ttl">{{ S.title }}</div>
+<div class="flex" style="margin-bottom:16px">
+  <div>To,<br><span class="b">{{ f('BUYER_NAME', inv.buyer.name) }}</span><br>{{ inv.buyer.line1 }}<br>{{ inv.buyer.line2 }}<br>
+    {% if inv.buyer.gstin %}{{ L.gstin }}{{ L.sep }} {{ f('BUYER_GSTIN', inv.buyer.gstin) }}{% endif %}</div>
+  <div>
+    <table style="width:auto">
+      <tr><td>{{ L.inv_no }}</td><td>:</td><td class="b">{{ f('INVOICE_NO', inv.number) }}</td></tr>
+      <tr><td>{{ L.date }}</td><td>:</td><td class="b">{{ f('INVOICE_DATE', inv.date_text) }}</td></tr>
+      <tr><td>Our {{ L.gstin }}</td><td>:</td><td>{{ f('VENDOR_GSTIN', inv.vendor.gstin) }}</td></tr>
+      <tr><td>PAN</td><td>:</td><td>{{ inv.vendor.pan }}</td></tr>
+      <tr><td>Place of Supply</td><td>:</td><td>{{ inv.place_of_supply }}</td></tr>
+    </table>
+  </div>
+</div>
+<table class="items">
+  <tr><th class="c">{{ L.sno }}</th><th>{{ L.desc }}</th><th>{{ L.hsn }}</th><th class="r">{{ L.amount }} (Rs.)</th></tr>
+  {% for it in inv['items'] %}
+  <tr><td class="c">{{ loop.index }}</td><td>{{ f('ITEM_DESC', it.desc) }}{% if it.qty > 1 %}<br><span class="small">{{ it.qty }} {{ it.unit }} x {{ m(it.price) }}</span>{% endif %}</td><td>{{ f('HSN', it.hsn) }}</td><td class="num">{{ m(it.taxable) }}</td></tr>
+  {% endfor %}
+  {{ totals('tr', 3) }}
+</table>
+<p><span class="b">{{ L.words }}{{ L.sep }}</span> {{ inv.total_words }}</p>
+<p class="small">Payment due within {{ inv.due_days }} days from the date of invoice.</p>
+{% if S.show_bank %}<div class="small">{{ bank() }}</div>{% endif %}
+<div style="margin-top:36px">{{ sign() }}</div>
+{% endblock %}

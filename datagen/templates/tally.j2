@@ -1,0 +1,62 @@
+{% extends "_base.j2" %}
+{% block css %}
+.t td, .t th { border: 1px solid {{ S.line }}; }
+.title { text-align: center; font-weight: bold; font-size: {{ S.size * 1.25 }}px; margin-bottom: 4px; }
+.t .cap { text-align: right; }
+.nob td { border-top: 0; border-bottom: 0; }
+.hs th, .hs td { border: 1px solid {{ S.line }}; text-align: right; }
+.hs th:first-child, .hs td:first-child { text-align: left; }
+{% endblock %}
+{% block body %}
+<div class="title">{{ S.title }}</div>
+<table class="t">
+  <tr>
+    <td rowspan="3" style="width:50%">
+      <span class="b">{{ f('VENDOR_NAME', inv.vendor.name) }}</span><br>
+      {{ inv.vendor.line1 }}<br>{{ inv.vendor.line2 }}<br>
+      {{ L.gstin }}{{ L.sep }} {{ f('VENDOR_GSTIN', inv.vendor.gstin) }}<br>
+      State Name{{ L.sep }} {{ inv.vendor.state }}, Code{{ L.sep }} {{ inv.vendor.state_code }}<br>
+      E-Mail{{ L.sep }} {{ inv.vendor.email }}
+    </td>
+    <td style="width:25%"><span class="small">{{ L.inv_no }}</span><br><span class="b">{{ f('INVOICE_NO', inv.number) }}</span></td>
+    <td style="width:25%"><span class="small">{{ L.date }}</span><br><span class="b">{{ f('INVOICE_DATE', inv.date_text) }}</span></td>
+  </tr>
+  <tr><td><span class="small">Delivery Note</span><br>&nbsp;</td><td><span class="small">Mode/Terms of Payment</span><br>{{ inv.payment_mode }}</td></tr>
+  <tr><td><span class="small">Reference No. &amp; Date</span><br>&nbsp;</td><td><span class="small">Other References</span><br>&nbsp;</td></tr>
+  <tr>
+    <td>
+      <span class="small">{{ L.buyer }}</span><br>
+      <span class="b">{{ f('BUYER_NAME', inv.buyer.name) }}</span><br>
+      {{ inv.buyer.line1 }}<br>{{ inv.buyer.line2 }}<br>
+      {% if inv.buyer.gstin %}{{ L.gstin }}{{ L.sep }} {{ f('BUYER_GSTIN', inv.buyer.gstin) }}<br>{% endif %}
+      State Name{{ L.sep }} {{ inv.buyer.state }}, Code{{ L.sep }} {{ inv.buyer.state_code }}
+    </td>
+    <td colspan="2"><span class="small">Dispatched through</span><br>{{ S.transport }}<br><span class="small">Terms of Delivery</span><br>&nbsp;</td>
+  </tr>
+</table>
+<table class="t" style="margin-top:-1px">
+  <tr><th class="c">{{ L.sno }}</th><th>{{ L.desc }}</th><th>{{ L.hsn }}</th><th class="r">{{ L.qty }}</th><th class="r">{{ L.rate }}</th><th>per</th><th class="r">{{ L.amount }}</th></tr>
+  {% for it in inv['items'] %}
+  <tr class="nob"><td class="c">{{ loop.index }}</td><td class="b">{{ f('ITEM_DESC', it.desc) }}</td><td>{{ f('HSN', it.hsn) }}</td>
+    <td class="num b">{{ it.qty }} {{ it.unit }}</td><td class="num">{{ m(it.price) }}</td><td>{{ it.unit }}</td><td class="num b">{{ m(it.taxable) }}</td></tr>
+  {% endfor %}
+  {% for _ in range(S.filler_rows) %}<tr class="nob"><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>{% endfor %}
+  {{ totals('tr', 6) }}
+</table>
+<table class="t" style="margin-top:-1px"><tr><td><span class="small">{{ L.words }}</span><br><span class="b">{{ inv.total_words }}</span></td></tr></table>
+<table class="hs" style="margin-top:-1px">
+  <tr><th>{{ L.hsn }}</th><th>Taxable Value</th>
+    {% if inv.interstate %}<th>Integrated Tax Rate</th><th>Integrated Tax Amount</th>{% else %}<th>Central Tax Rate</th><th>Central Tax Amount</th><th>State Tax Rate</th><th>State Tax Amount</th>{% endif %}
+    <th>Total Tax Amount</th></tr>
+  {% for g in inv.groups %}
+  <tr><td>{{ g.hsn }}</td><td>{{ m(g.taxable) }}</td>
+    {% if inv.interstate %}<td>{{ rate('IGST_RATE', g.rate, True) }}</td><td>{{ m(g.igst) }}</td>{% else %}<td>{{ rate('CGST_RATE', g.half_rate, True) }}</td><td>{{ m(g.cgst) }}</td><td>{{ rate('SGST_RATE', g.half_rate, True) }}</td><td>{{ m(g.sgst) }}</td>{% endif %}
+    <td>{{ m(g.tax) }}</td></tr>
+  {% endfor %}
+</table>
+<table class="t" style="margin-top:-1px"><tr>
+  <td style="width:50%" class="small">{% if S.show_bank %}{{ bank() }}{% endif %}<u>Declaration</u><br>We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.</td>
+  <td>{{ sign() }}</td>
+</tr></table>
+<div class="c small" style="margin-top:6px">This is a Computer Generated Invoice</div>
+{% endblock %}

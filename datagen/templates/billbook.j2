@@ -1,0 +1,32 @@
+{% extends "_base.j2" %}
+{% block css %}
+.page { border: 2px solid {{ S.accent }}; }
+.hd { display: flex; justify-content: space-between; color: {{ S.accent }}; font-size: {{ S.size * 0.9 }}px; }
+.nm { text-align: center; color: {{ S.accent }}; }
+.nm h1 { font-size: {{ S.size * 2.2 }}px; }
+.ln { display: flex; justify-content: space-between; margin: 8px 0; gap: 20px; }
+.dot { border-bottom: 1px dotted {{ S.accent }}; }
+.items th { background: {{ S.accent }}; color: #fff; border: 1px solid {{ S.accent }}; }
+.items td { border-left: 1px solid {{ S.accent }}; border-right: 1px solid {{ S.accent }}; }
+.items tr:last-child td, .items .sub td, .items .tax td, .items .grand td, .items tr.x td { border: 1px solid {{ S.accent }}; }
+.items .cap { text-align: right; color: {{ S.accent }}; }
+.val { font-family: {{ S.fill_font }}; color: {{ S.fill_ink }}; }
+{% endblock %}
+{% block body %}
+<div class="hd"><span>{{ L.gstin }}{{ L.sep }} <span class="val">{{ f('VENDOR_GSTIN', inv.vendor.gstin) }}</span></span><span class="b">{{ S.title }}</span><span>Mob{{ L.sep }} {{ inv.vendor.phone }}</span></div>
+<div class="nm"><h1>{{ f('VENDOR_NAME', inv.vendor.name) }}</h1><div>{{ inv.vendor.line1 }}, {{ inv.vendor.line2 }}</div></div>
+<div class="ln"><span>{{ L.inv_no }}{{ L.sep }} <span class="val b">{{ f('INVOICE_NO', inv.number) }}</span></span><span>{{ L.date }}{{ L.sep }} <span class="val">{{ f('INVOICE_DATE', inv.date_text) }}</span></span></div>
+<div class="ln dot"><span>{{ L.buyer }}{{ L.sep }} <span class="val">{{ f('BUYER_NAME', inv.buyer.name) }}{% if inv.b2b %}, {{ inv.buyer.city }}{% endif %}</span></span></div>
+{% if inv.buyer.gstin %}<div class="ln dot"><span>Party {{ L.gstin }}{{ L.sep }} <span class="val">{{ f('BUYER_GSTIN', inv.buyer.gstin) }}</span></span></div>{% endif %}
+<table class="items">
+  <tr><th class="c">{{ L.sno }}</th><th>{{ L.desc }}</th>{% if S.show_hsn %}<th>{{ L.hsn }}</th>{% endif %}<th class="r">{{ L.qty }}</th><th class="r">{{ L.rate }}</th><th class="r">{{ L.amount }}</th></tr>
+  {% for it in inv['items'] %}
+  <tr class="val"><td class="c">{{ loop.index }}</td><td>{{ f('ITEM_DESC', it.desc) }}</td>{% if S.show_hsn %}<td>{{ f('HSN', it.hsn) }}</td>{% endif %}<td class="num">{{ it.qty }}</td><td class="num">{{ m(it.price) }}</td><td class="num">{{ m(it.taxable) }}</td></tr>
+  {% endfor %}
+  {% for _ in range(S.filler_rows) %}<tr><td>&nbsp;</td><td></td>{% if S.show_hsn %}<td></td>{% endif %}<td></td><td></td><td></td></tr>{% endfor %}
+  <tr class="x"><td colspan="{{ 5 if S.show_hsn else 4 }}"></td><td></td></tr>
+  {{ totals('tr', 5 if S.show_hsn else 4) }}
+</table>
+<div class="ln small"><span>{{ S.note }}</span><span>For {{ f('VENDOR_NAME', inv.vendor.name) }}</span></div>
+<div class="r small" style="margin-top:{{ S.sign_gap }}px">{{ L.signatory }}</div>
+{% endblock %}

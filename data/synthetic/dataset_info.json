@@ -1,0 +1,56 @@
+{
+ "count": 300,
+ "seed": 42,
+ "splits": {
+  "train": 229,
+  "val": 27,
+  "test": 44
+ },
+ "templates": {
+  "thermal": 55,
+  "classic": 53,
+  "tally": 57,
+  "letterhead": 23,
+  "billbook": 28,
+  "modern": 29,
+  "ecommerce": 24,
+  "columnar": 31
+ },
+ "holdout_template": "columnar",
+ "categories": {
+  "restaurant": 26,
+  "hardware": 18,
+  "grocery": 34,
+  "electronics": 23,
+  "services": 40,
+  "medical": 34,
+  "jewellery": 15,
+  "stationery": 49,
+  "clothing": 44,
+  "auto_parts": 17
+ },
+ "supply_type": {
+  "intra-state": 244,
+  "inter-state": 56
+ },
+ "clean_images": 97,
+ "words": 44849,
+ "entities": {
+  "VENDOR_NAME": 545,
+  "VENDOR_GSTIN": 300,
+  "BUYER_NAME": 271,
+  "BUYER_GSTIN": 162,
+  "INVOICE_NO": 300,
+  "INVOICE_DATE": 300,
+  "ITEM_DESC": 856,
+  "HSN": 611,
+  "TAXABLE_VALUE": 300,
+  "CGST_RATE": 441,
+  "CGST_AMOUNT": 244,
+  "SGST_RATE": 441,
+  "SGST_AMOUNT": 244,
+  "IGST_RATE": 95,
+  "IGST_AMOUNT": 56,
+  "TOTAL_AMOUNT": 300
+ }
+}

@@ -1,0 +1,45 @@
+{% extends "_base.j2" %}
+{% block css %}
+.g td, .g th { border: 1px solid {{ S.line }}; }
+.g th { background: {{ S.tint }}; text-align: center; font-size: {{ S.size * 0.9 }}px; }
+.hd { display: flex; justify-content: space-between; align-items: center; border: 1px solid {{ S.line }}; border-bottom: 0; padding: 10px; }
+.hd h1 { font-size: {{ S.size * 1.7 }}px; color: {{ S.accent }}; }
+.tot td { font-weight: bold; background: {{ S.tint }}; }
+.box { border: 1px solid {{ S.line }}; border-top: 0; padding: 8px; }
+{% endblock %}
+{% block body %}
+<div class="hd">
+  <div><h1>{{ f('VENDOR_NAME', inv.vendor.name) }}</h1>{{ inv.vendor.line1 }}, {{ inv.vendor.line2 }}<br>{{ L.gstin }}{{ L.sep }} {{ f('VENDOR_GSTIN', inv.vendor.gstin) }}</div>
+  <div class="r"><span class="b" style="font-size:{{ S.size * 1.3 }}px">{{ S.title }}</span><br>{{ L.inv_no }}{{ L.sep }} {{ f('INVOICE_NO', inv.number) }}<br>{{ L.date }}{{ L.sep }} {{ f('INVOICE_DATE', inv.date_text) }}</div>
+</div>
+<table class="g"><tr>
+  <td style="width:50%"><span class="b">Details of Receiver (Billed to)</span><br>Name{{ L.sep }} {{ f('BUYER_NAME', inv.buyer.name) }}<br>Address{{ L.sep }} {{ inv.buyer.line1 }}, {{ inv.buyer.line2 }}<br>
+    {% if inv.buyer.gstin %}{{ L.gstin }}{{ L.sep }} {{ f('BUYER_GSTIN', inv.buyer.gstin) }}<br>{% endif %}State{{ L.sep }} {{ inv.buyer.state }} &nbsp; Code{{ L.sep }} {{ inv.buyer.state_code }}</td>
+  <td><span class="b">Details of Consignee (Shipped to)</span><br>Name{{ L.sep }} {{ inv.buyer.name }}<br>Address{{ L.sep }} {{ inv.buyer.line1 }}, {{ inv.buyer.line2 }}<br>State{{ L.sep }} {{ inv.buyer.state }} &nbsp; Code{{ L.sep }} {{ inv.buyer.state_code }}</td>
+</tr></table>
+<table class="g" style="margin-top:-1px">
+  <tr><th rowspan="2">{{ L.sno }}</th><th rowspan="2">{{ L.desc }}</th><th rowspan="2">{{ L.hsn }}</th><th rowspan="2">{{ L.qty }}</th><th rowspan="2">{{ L.rate }}</th><th rowspan="2">Taxable Value</th>
+    {% if inv.interstate %}<th colspan="2">IGST</th>{% else %}<th colspan="2">CGST</th><th colspan="2">SGST</th>{% endif %}<th rowspan="2">Total</th></tr>
+  <tr>{% for _ in range(1 if inv.interstate else 2) %}<th>Rate</th><th>Amt</th>{% endfor %}</tr>
+  {% for it in inv['items'] %}
+  <tr><td class="c">{{ loop.index }}</td><td>{{ f('ITEM_DESC', it.desc) }}</td><td>{{ f('HSN', it.hsn) }}</td><td class="num">{{ it.qty }}</td><td class="num">{{ m(it.price) }}</td><td class="num">{{ m(it.taxable) }}</td>
+    {% if inv.interstate %}<td class="num">{{ rate('IGST_RATE', it.rate, True) }}</td><td class="num">{{ m(it.igst) }}</td>
+    {% else %}<td class="num">{{ rate('CGST_RATE', it.rate / 2, True) }}</td><td class="num">{{ m(it.cgst) }}</td><td class="num">{{ rate('SGST_RATE', it.rate / 2, True) }}</td><td class="num">{{ m(it.sgst) }}</td>{% endif %}
+    <td class="num">{{ m(it.total) }}</td></tr>
+  {% endfor %}
+  <tr class="tot"><td colspan="3" class="r">{{ L.total_word }}</td><td class="num">{{ inv.total_qty }}</td><td></td><td class="num">{{ amt('TAXABLE_VALUE', inv.taxable) }}</td>
+    {% if inv.interstate %}<td></td><td class="num">{{ amt('IGST_AMOUNT', inv.igst) }}</td>
+    {% else %}<td></td><td class="num">{{ amt('CGST_AMOUNT', inv.cgst) }}</td><td></td><td class="num">{{ amt('SGST_AMOUNT', inv.sgst) }}</td>{% endif %}
+    <td class="num">{{ m(inv.taxable + inv.tax) }}</td></tr>
+</table>
+<div class="box flex">
+  <div style="width:55%"><span class="b">{{ L.words }}{{ L.sep }}</span><br>{{ inv.total_words }}<br><br><span class="small">{% if S.show_bank %}{{ bank() }}{% endif %}</span></div>
+  <div style="width:40%">
+    <div class="row"><span>Total Amount Before Tax</span><span class="num">{{ cur(inv.taxable) }}</span></div>
+    <div class="row"><span>Total Tax Amount</span><span class="num">{{ cur(inv.tax) }}</span></div>
+    {% if inv.round_off != 0 %}<div class="row"><span>{{ L.round_off }}</span><span class="num">{{ '%+.2f'|format(inv.round_off|float) }}</span></div>{% endif %}
+    <div class="row grand"><span>{{ L.total }}</span><span class="num">{{ amt('TOTAL_AMOUNT', inv.total) }}</span></div>
+  </div>
+</div>
+<div class="box flex"><div class="small" style="width:55%">{{ terms() }}</div><div style="width:40%">{{ sign() }}</div></div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "_base.j2" %}
+{% block css %}
+.frame { border: {{ S.bw }}px solid {{ S.line }}; }
+.frame > div, .frame > table { border-bottom: {{ S.bw }}px solid {{ S.line }}; }
+.frame > :last-child { border-bottom: 0; }
+.head { text-align: center; padding: 10px; }
+.head h1 { font-size: {{ S.size * 1.9 }}px; color: {{ S.accent }}; }
+.title { text-align: center; font-weight: bold; padding: 4px; letter-spacing: 1px; background: {{ S.tint }}; }
+.two { display: flex; }
+.two > div { flex: 1; padding: 8px; }
+.two > div + div { border-left: {{ S.bw }}px solid {{ S.line }}; }
+.items th, .items td { border: {{ S.bw }}px solid {{ S.line }}; }
+.items tr > :first-child { border-left: 0; } .items tr > :last-child { border-right: 0; }
+.items thead th { background: {{ S.tint }}; border-top: 0; }
+.items .cap { text-align: right; }
+.foot { display: flex; }
+.foot > div { flex: 1; padding: 8px; }
+.foot > div + div { border-left: {{ S.bw }}px solid {{ S.line }}; }
+{% endblock %}
+{% block body %}
+<div class="frame">
+  {% if S.title_first %}<div class="title">{{ S.title }}</div>{% endif %}
+  <div class="head">
+    <h1>{{ f('VENDOR_NAME', inv.vendor.name|upper if S.upper else inv.vendor.name) }}</h1>
+    <div>{{ inv.vendor.line1 }}, {{ inv.vendor.line2 }}</div>
+    <div>Ph{{ L.sep }} {{ inv.vendor.phone }} &nbsp; Email{{ L.sep }} {{ inv.vendor.email }}</div>
+    <div class="b">{{ L.gstin }}{{ L.sep }} {{ f('VENDOR_GSTIN', inv.vendor.gstin) }}{% if S.show_pan %} &nbsp; PAN{{ L.sep }} {{ inv.vendor.pan }}{% endif %}</div>
+  </div>
+  {% if not S.title_first %}<div class="title">{{ S.title }}</div>{% endif %}
+  <div class="two">
+    {% set party %}
+    <div><span class="b">{{ L.buyer }}{{ L.sep }}</span><br>
+      {{ f('BUYER_NAME', inv.buyer.name) }}<br>
+      {% if inv.b2b or S.buyer_addr %}{{ inv.buyer.line1 }}<br>{{ inv.buyer.line2 }}<br>{% endif %}
+      {% if inv.buyer.gstin %}{{ L.gstin }}{{ L.sep }} {{ f('BUYER_GSTIN', inv.buyer.gstin) }}<br>{% endif %}
+      {% if S.show_pos %}Place of Supply{{ L.sep }} {{ inv.place_of_supply }}{% endif %}
+    </div>{% endset %}
+    {% set meta %}
+    <div>
+      {{ L.inv_no }}{{ L.sep }} {{ f('INVOICE_NO', inv.number) }}<br>
+      {{ L.date }}{{ L.sep }} {{ f('INVOICE_DATE', inv.date_text) }}<br>
+      {% if S.show_pay %}Payment Mode{{ L.sep }} {{ inv.payment_mode }}<br>{% endif %}
+      {% if inv.b2b and S.show_eway %}E-Way Bill No{{ L.sep }} {{ inv.eway }}<br>{% endif %}
+      {% if S.show_state %}State{{ L.sep }} {{ inv.vendor.state }} &nbsp; Code{{ L.sep }} {{ inv.vendor.state_code }}{% endif %}
+    </div>{% endset %}
+    {% if S.flip %}{{ meta }}{{ party }}{% else %}{{ party }}{{ meta }}{% endif %}
+  </div>
+  {% set cols = 5 + (1 if S.show_hsn else 0) + (1 if S.show_gst_col else 0) %}
+  <table class="items">
+    <thead><tr><th class="c">{{ L.sno }}</th><th>{{ L.desc }}</th>{% if S.show_hsn %}<th>{{ L.hsn }}</th>{% endif %}
+      <th class="r">{{ L.qty }}</th><th class="r">{{ L.rate }}</th>{% if S.show_gst_col %}<th class="r">GST %</th>{% endif %}<th class="r">{{ L.amount }}</th></tr></thead>
+    <tbody>
+    {% for it in inv['items'] %}
+    <tr><td class="c">{{ loop.index }}</td><td>{{ f('ITEM_DESC', it.desc) }}</td>{% if S.show_hsn %}<td>{{ f('HSN', it.hsn) }}</td>{% endif %}
+      <td class="num">{{ it.qty }} {{ it.unit if S.show_unit }}</td><td class="num">{{ m(it.price) }}</td>{% if S.show_gst_col %}<td class="num">{{ r(it.rate) }}%</td>{% endif %}<td class="num">{{ m(it.taxable) }}</td></tr>
+    {% endfor %}
+    {% for _ in range(S.filler_rows) %}<tr><td>&nbsp;</td><td></td>{% if S.show_hsn %}<td></td>{% endif %}<td></td><td></td>{% if S.show_gst_col %}<td></td>{% endif %}<td></td></tr>{% endfor %}
+    {{ totals('tr', cols - 1) }}
+    </tbody>
+  </table>
+  {% if S.show_words %}<div style="padding:6px 8px"><span class="b">{{ L.words }}{{ L.sep }}</span> {{ inv.total_words }}</div>{% endif %}
+  <div class="foot">
+    <div class="small">{% if S.show_bank %}{{ bank() }}{% endif %}{% if S.show_terms %}{{ terms() }}{% endif %}</div>
+    <div>{{ sign() }}</div>
+  </div>
+</div>
+{% if S.show_note %}<div class="c small muted" style="margin-top:6px">{{ S.note }}</div>{% endif %}
+{% endblock %}
