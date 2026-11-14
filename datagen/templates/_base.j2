@@ -1,0 +1,94 @@
+{#- Shared page shell and macros.
+    Rules for template authors (the word-box extractor depends on them):
+    * every labelled value goes through f()/amt()/rate() so it carries data-f
+    * always leave whitespace between a caption and a labelled span
+    * no CSS text-transform and no ::before/::after text: what is printed must be in the DOM -#}
+{%- macro f(label, text) -%}<span data-f="{{ label }}">{{ text }}</span>{%- endmacro -%}
+{%- macro amt(label, value) -%}{{ S.cur_sep }}<span data-f="{{ label }}">{{ S.cur_att }}{{ m(value) }}{{ S.cur_suffix }}</span>{%- endmacro -%}
+{%- macro cur(value) -%}{{ S.cur_sep }}{{ S.cur_att }}{{ m(value) }}{%- endmacro -%}
+{%- macro rate(label, value, plain=False) -%}<span data-f="{{ label }}">{{ "" if plain else S.rate_open }}{{ r(value) }}{{ S.pct }}{{ "" if plain else S.rate_close }}</span>{%- endmacro -%}
+
+{#- Tax lines as label/value pairs. kind='tr' emits table rows, kind='div' flex rows. -#}
+{%- macro pair(kind, caption, value, cls='', span=1) -%}
+{%- if kind == 'tr' -%}
+<tr class="{{ cls }}"><td class="cap" colspan="{{ span }}">{{ caption }}</td><td class="num">{{ value }}</td></tr>
+{%- else -%}
+<div class="row {{ cls }}"><span class="cap">{{ caption }}</span><span class="num">{{ value }}</span></div>
+{%- endif -%}
+{%- endmacro -%}
+
+{%- macro tax_lines(kind='tr', span=1) -%}
+{%- set multi = inv.groups|length > 1 -%}
+{%- for g in inv.groups if g.rate > 0 or not multi -%}
+  {%- set on = (' ' ~ L.on ~ ' ' ~ m(g.taxable)) if multi else '' -%}
+  {%- if inv.interstate -%}
+    {{ pair(kind, L.igst ~ L.at ~ rate('IGST_RATE', g.rate) ~ on, cur(g.igst) if multi else amt('IGST_AMOUNT', g.igst), 'tax', span) }}
+  {%- else -%}
+    {{ pair(kind, L.cgst ~ L.at ~ rate('CGST_RATE', g.half_rate) ~ on, cur(g.cgst) if multi else amt('CGST_AMOUNT', g.cgst), 'tax', span) }}
+    {{ pair(kind, L.sgst ~ L.at ~ rate('SGST_RATE', g.half_rate) ~ on, cur(g.sgst) if multi else amt('SGST_AMOUNT', g.sgst), 'tax', span) }}
+  {%- endif -%}
+{%- endfor -%}
+{%- if multi -%}
+  {%- if inv.interstate -%}
+    {{ pair(kind, L.total_word ~ ' ' ~ L.igst, amt('IGST_AMOUNT', inv.igst), 'tax', span) }}
+  {%- else -%}
+    {{ pair(kind, L.total_word ~ ' ' ~ L.cgst, amt('CGST_AMOUNT', inv.cgst), 'tax', span) }}
+    {{ pair(kind, L.total_word ~ ' ' ~ L.sgst, amt('SGST_AMOUNT', inv.sgst), 'tax', span) }}
+  {%- endif -%}
+{%- endif -%}
+{%- endmacro -%}
+
+{#- Subtotal -> discount -> taxable -> taxes -> round off -> total -#}
+{%- macro totals(kind='tr', span=1) -%}
+{%- if inv.discount > 0 -%}
+  {{ pair(kind, L.gross, cur(inv.gross), '', span) }}
+  {{ pair(kind, L.discount, cur(inv.discount), '', span) }}
+{%- endif -%}
+{{ pair(kind, L.taxable, amt('TAXABLE_VALUE', inv.taxable), 'sub', span) }}
+{{ tax_lines(kind, span) }}
+{%- if inv.round_off != 0 -%}
+  {{ pair(kind, L.round_off, '%+.2f'|format(inv.round_off|float), '', span) }}
+{%- endif -%}
+{{ pair(kind, L.total, amt('TOTAL_AMOUNT', inv.total), 'grand', span) }}
+{%- endmacro -%}
+
+{%- macro bank() -%}
+<div class="bank"><b>{{ L.bank }}</b><br>
+Bank{{ L.sep }} {{ inv.vendor.bank.name }}<br>
+A/c No{{ L.sep }} {{ inv.vendor.bank.account }}<br>
+IFSC{{ L.sep }} {{ inv.vendor.bank.ifsc }}</div>
+{%- endmacro -%}
+
+{%- macro terms() -%}
+<div class="terms"><b>{{ L.terms }}</b><br>
+{% for t in S.terms %}{{ loop.index }}. {{ t }}<br>{% endfor %}</div>
+{%- endmacro -%}
+
+{%- macro sign() -%}
+<div class="sign">For {{ f('VENDOR_NAME', inv.vendor.name) }}<div class="gap"></div>{{ L.signatory }}</div>
+{%- endmacro -%}
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: {{ S.paper }}; }
+body { font-family: {{ S.font }}; font-size: {{ S.size }}px; color: {{ S.ink }}; line-height: {{ S.leading }}; }
+.page { width: {{ S.width }}px; min-height: {{ S.min_height }}px; padding: {{ S.pad }}px; position: relative; }
+table { border-collapse: collapse; width: 100%; }
+td, th { padding: {{ S.cell_pad }}px {{ S.cell_pad + 2 }}px; vertical-align: top; text-align: left; font-weight: normal; }
+th { font-weight: bold; }
+.num { text-align: right; white-space: nowrap; }
+.c { text-align: center; }
+.r { text-align: right; }
+.b, .grand td, .grand span { font-weight: bold; }
+.small { font-size: {{ (S.size * 0.86)|round(1) }}px; }
+.muted { color: {{ S.muted }}; }
+.row { display: flex; justify-content: space-between; gap: 2px 12px; flex-wrap: wrap; }
+[data-f="INVOICE_DATE"], [data-f="INVOICE_NO"], [data-f$="_AMOUNT"], [data-f$="_RATE"], [data-f="TAXABLE_VALUE"] { white-space: nowrap; }
+.flex { display: flex; justify-content: space-between; gap: 18px; }
+.gap { height: {{ S.sign_gap }}px; }
+.sign { text-align: right; }
+h1, h2, h3 { margin: 0; }
+{% block css %}{% endblock %}
+</style></head><body><div class="page">
+{% block body %}{% endblock %}
+</div></body></html>

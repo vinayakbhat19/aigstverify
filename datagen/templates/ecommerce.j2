@@ -1,0 +1,52 @@
+{% extends "_base.j2" %}
+{% block css %}
+.top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.logo { font-size: {{ S.size * 2 }}px; font-weight: 800; color: {{ S.accent }}; }
+.addr { display: flex; justify-content: space-between; gap: 30px; margin-bottom: 12px; }
+.addr > div { width: 48%; }
+.addr > div + div { text-align: right; }
+.items td, .items th { border: 1px solid {{ S.line }}; }
+.items th { background: {{ S.tint }}; }
+.items .cap { text-align: left; font-weight: bold; }
+{% endblock %}
+{% block body %}
+<div class="top">
+  <div class="logo">{{ S.marketplace }}</div>
+  <div class="r"><span class="b">{{ S.title }}</span><br><span class="small">(Original for Recipient)</span></div>
+</div>
+<div class="addr">
+  <div><span class="b">Sold By{{ L.sep }}</span><br>
+    {{ f('VENDOR_NAME', inv.vendor.name) }}<br>{{ inv.vendor.line1 }}<br>{{ inv.vendor.line2 }}<br>IN</div>
+  <div><span class="b">Billing Address{{ L.sep }}</span><br>
+    {{ f('BUYER_NAME', inv.buyer.name) }}<br>{{ inv.buyer.line1 }}<br>{{ inv.buyer.line2 }}<br>IN<br>
+    {% if inv.buyer.gstin %}{{ L.gstin }}{{ L.sep }} {{ f('BUYER_GSTIN', inv.buyer.gstin) }}{% endif %}</div>
+</div>
+<div class="addr">
+  <div><span class="b">PAN No{{ L.sep }}</span> {{ inv.vendor.pan }}<br>
+    <span class="b">GST Registration No{{ L.sep }}</span> {{ f('VENDOR_GSTIN', inv.vendor.gstin) }}</div>
+  <div><span class="b">Shipping Address{{ L.sep }}</span><br>{{ inv.buyer.name }}<br>{{ inv.buyer.line1 }}<br>{{ inv.buyer.line2 }}<br>
+    <span class="b">Place of supply{{ L.sep }}</span> {{ inv.buyer.state|upper }}</div>
+</div>
+<div class="addr">
+  <div><span class="b">Order Number{{ L.sep }}</span> {{ S.order_no }}<br><span class="b">Order Date{{ L.sep }}</span> {{ S.order_date }}</div>
+  <div><span class="b">{{ L.inv_no }}{{ L.sep }}</span> {{ f('INVOICE_NO', inv.number) }}<br>
+    <span class="b">{{ L.date }}{{ L.sep }}</span> {{ f('INVOICE_DATE', inv.date_text) }}</div>
+</div>
+<table class="items">
+  <tr><th>Sl. No</th><th>Description</th><th class="r">Unit Price</th><th class="r">Qty</th><th class="r">Net Amount</th><th class="r">Tax Rate</th><th>Tax Type</th><th class="r">Tax Amount</th><th class="r">Total Amount</th></tr>
+  {% for it in inv['items'] %}
+  {% set types = [('IGST', it.rate, it.igst)] if inv.interstate else [('CGST', it.rate / 2, it.cgst), ('SGST', it.rate / 2, it.sgst)] %}
+  <tr><td>{{ loop.index }}</td><td>{{ f('ITEM_DESC', it.desc) }}<br><span class="small">HSN{{ L.sep }} {{ f('HSN', it.hsn) }}</span></td>
+    <td class="num">{{ cur(it.price) }}</td><td class="num">{{ it.qty }}</td><td class="num">{{ cur(it.taxable) }}</td>
+    <td class="num">{% for t in types %}{{ rate(t[0] ~ '_RATE', t[1], True) }}{% if not loop.last %}<br>{% endif %}{% endfor %}</td>
+    <td>{% for t in types %}{{ t[0] }}{% if not loop.last %}<br>{% endif %}{% endfor %}</td>
+    <td class="num">{% for t in types %}{{ cur(t[2]) }}{% if not loop.last %}<br>{% endif %}{% endfor %}</td>
+    <td class="num">{{ cur(it.total) }}</td></tr>
+  {% endfor %}
+  {{ totals('tr', 8) }}
+  <tr><td colspan="9"><span class="b">{{ L.words }}{{ L.sep }}</span><br>{{ inv.total_words }}</td></tr>
+  <tr><td colspan="9" class="r"><span class="b">For {{ f('VENDOR_NAME', inv.vendor.name) }}</span><div class="gap"></div><span class="b">Authorized Signatory</span></td></tr>
+</table>
+<div class="small" style="margin-top:8px">Whether tax is payable under reverse charge - No</div>
+<table class="items small" style="margin-top:10px"><tr><td>Payment Transaction ID{{ L.sep }} {{ S.txn }}</td><td>Date &amp; Time{{ L.sep }} {{ S.order_date }}, {{ inv.time_text }}</td><td>Mode of Payment{{ L.sep }} {{ inv.payment_mode }}</td></tr></table>
+{% endblock %}

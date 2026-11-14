@@ -1,0 +1,6 @@
+# Only needed to regenerate the synthetic dataset (scripts/generate_invoices.py)
+jinja2
+playwright
+opencv-python-headless
+numpy
+Pillow

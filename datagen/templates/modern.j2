@@ -1,0 +1,46 @@
+{% extends "_base.j2" %}
+{% block css %}
+.band { background: {{ S.accent }}; color: #fff; margin: -{{ S.pad }}px -{{ S.pad }}px 22px; padding: 26px {{ S.pad }}px; display: flex; justify-content: space-between; align-items: flex-end; }
+.band h1 { font-size: {{ S.size * 2.1 }}px; font-weight: 700; }
+.band h2 { font-size: {{ S.size * 1.5 }}px; font-weight: 400; letter-spacing: 2px; }
+.cards { display: flex; gap: 20px; margin-bottom: 20px; }
+.cards > div { flex: 1; }
+.k { color: {{ S.muted }}; font-size: {{ S.size * 0.82 }}px; letter-spacing: .5px; }
+.items th { border-bottom: 2px solid {{ S.accent }}; color: {{ S.accent }}; padding-bottom: 6px; }
+.items td { border-bottom: 1px solid {{ S.line }}; padding-top: 7px; padding-bottom: 7px; }
+.sum { width: 46%; margin-left: auto; margin-top: 14px; }
+.sum .row { padding: 4px 0; }
+.sum .grand { border-top: 2px solid {{ S.accent }}; margin-top: 6px; padding-top: 8px; font-size: {{ S.size * 1.2 }}px; }
+.foot { margin-top: 30px; display: flex; justify-content: space-between; gap: 30px; }
+{% endblock %}
+{% block body %}
+<div class="band">
+  <div><h1>{{ f('VENDOR_NAME', inv.vendor.name) }}</h1>
+    <div>{{ inv.vendor.line1 }}, {{ inv.vendor.line2 }}</div></div>
+  <h2>{{ S.title }}</h2>
+</div>
+<div class="cards">
+  <div><div class="k">{{ L.buyer|upper }}</div>
+    <div class="b">{{ f('BUYER_NAME', inv.buyer.name) }}</div>
+    {% if inv.b2b or S.buyer_addr %}<div>{{ inv.buyer.line1 }}</div><div>{{ inv.buyer.line2 }}</div>{% endif %}
+    {% if inv.buyer.gstin %}<div>{{ L.gstin }}{{ L.sep }} {{ f('BUYER_GSTIN', inv.buyer.gstin) }}</div>{% endif %}
+  </div>
+  <div><div class="k">{{ L.inv_no|upper }}</div><div class="b">{{ f('INVOICE_NO', inv.number) }}</div>
+    <div class="k" style="margin-top:8px">{{ L.date|upper }}</div><div class="b">{{ f('INVOICE_DATE', inv.date_text) }}</div></div>
+  <div><div class="k">SELLER {{ L.gstin|upper }}</div><div class="b">{{ f('VENDOR_GSTIN', inv.vendor.gstin) }}</div>
+    <div class="k" style="margin-top:8px">PLACE OF SUPPLY</div><div>{{ inv.place_of_supply }}</div></div>
+</div>
+<table class="items">
+  <thead><tr><th>{{ L.desc }}</th>{% if S.show_hsn %}<th>{{ L.hsn }}</th>{% endif %}<th class="r">{{ L.qty }}</th><th class="r">{{ L.rate }}</th><th class="r">{{ L.amount }}</th></tr></thead>
+  <tbody>{% for it in inv['items'] %}
+  <tr><td>{{ f('ITEM_DESC', it.desc) }}</td>{% if S.show_hsn %}<td>{{ f('HSN', it.hsn) }}</td>{% endif %}<td class="num">{{ it.qty }}</td><td class="num">{{ m(it.price) }}</td><td class="num">{{ m(it.taxable) }}</td></tr>
+  {% endfor %}</tbody>
+</table>
+<div class="sum">{{ totals('div') }}</div>
+{% if S.show_words %}<div style="margin-top:14px"><span class="k">{{ L.words|upper }}</span><br>{{ inv.total_words }}</div>{% endif %}
+<div class="foot">
+  <div class="small">{% if S.show_bank %}{{ bank() }}{% endif %}{% if S.show_terms %}<div style="margin-top:8px">{{ terms() }}</div>{% endif %}</div>
+  <div>{{ sign() }}</div>
+</div>
+<div class="small muted" style="margin-top:26px">{{ inv.vendor.email }} | {{ inv.vendor.phone }} | PAN {{ inv.vendor.pan }}</div>
+{% endblock %}

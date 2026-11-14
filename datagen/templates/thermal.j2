@@ -1,0 +1,37 @@
+{% extends "_base.j2" %}
+{% block css %}
+.hr { border-top: 1px {{ S.rule }} {{ S.ink }}; margin: 5px 0; }
+.it td { padding: 1px 2px; }
+.head { text-align: center; }
+.head .n { font-size: {{ S.size * 1.35 }}px; font-weight: bold; }
+.grand { font-size: {{ S.size * 1.2 }}px; font-weight: bold; }
+{% endblock %}
+{% block body %}
+<div class="head">
+  <div class="n">{{ f('VENDOR_NAME', inv.vendor.name|upper if S.upper else inv.vendor.name) }}</div>
+  <div>{{ inv.vendor.line1 }}</div><div>{{ inv.vendor.line2 }}</div>
+  <div>Ph{{ L.sep }} {{ inv.vendor.phone }}</div>
+  {% if S.gstin_top %}<div>{{ L.gstin }}{{ L.sep }} {{ f('VENDOR_GSTIN', inv.vendor.gstin) }}</div>{% endif %}
+  <div class="b">{{ S.title }}</div>
+</div>
+<div class="hr"></div>
+<div class="row"><span>{{ L.inv_no }}{{ L.sep }} {{ f('INVOICE_NO', inv.number) }}</span><span>{{ L.date }}{{ L.sep }} {{ f('INVOICE_DATE', inv.date_text) }}</span></div>
+<div class="row"><span>{% if inv.category == 'restaurant' %}Table{{ L.sep }} {{ inv.table_no }}{% else %}Counter{{ L.sep }} {{ inv.table_no % 4 + 1 }}{% endif %}</span><span>Time{{ L.sep }} {{ inv.time_text }}</span></div>
+{% if S.show_buyer %}<div>{{ L.buyer }}{{ L.sep }} {{ f('BUYER_NAME', inv.buyer.name) }}</div>{% endif %}
+{% if inv.buyer.gstin %}<div>Cust {{ L.gstin }}{{ L.sep }} {{ f('BUYER_GSTIN', inv.buyer.gstin) }}</div>{% endif %}
+<div class="hr"></div>
+<table class="it">
+  <tr><th>{{ L.desc }}</th><th class="r">{{ L.qty }}</th><th class="r">{{ L.rate }}</th><th class="r">{{ L.amount }}</th></tr>
+  {% for it in inv['items'] %}
+  <tr><td>{{ f('ITEM_DESC', it.desc) }}{% if S.show_hsn %}<br><span class="small">{{ L.hsn }}{{ L.sep }} {{ f('HSN', it.hsn) }}</span>{% endif %}</td><td class="num">{{ it.qty }}</td><td class="num">{{ m(it.price) }}</td><td class="num">{{ m(it.taxable) }}</td></tr>
+  {% endfor %}
+</table>
+<div class="hr"></div>
+<div class="row"><span>Total Items{{ L.sep }} {{ inv['items']|length }}</span><span>Total Qty{{ L.sep }} {{ inv.total_qty }}</span></div>
+<div class="hr"></div>
+{{ totals('div') }}
+<div class="hr"></div>
+{% if not S.gstin_top %}<div class="c">{{ L.gstin }}{{ L.sep }} {{ f('VENDOR_GSTIN', inv.vendor.gstin) }}</div>{% endif %}
+<div class="row"><span>Payment{{ L.sep }} {{ inv.payment_mode }}</span><span>Cashier{{ L.sep }} {{ inv.cashier }}</span></div>
+<div class="c" style="margin-top:8px">{{ S.note }}</div>
+{% endblock %}
