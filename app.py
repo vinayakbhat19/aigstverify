@@ -7,8 +7,7 @@ from PIL import Image
 
 import re
 
-from utils.ocr import extract_text
-from utils.llm_extractor import extract_invoice_llm
+from utils.pipeline import extract_invoice
 from utils.validator import validate_gstin
 from utils.gst_api import verify_gst_api
 from utils.product_classifier import detect_product_category
@@ -146,25 +145,12 @@ async def upload_invoice(
         )
 
         # =====================================
-        # OCR
+        # OCR + EXTRACTION
+        # (local model first, Gemini only when its
+        #  answer fails the confidence/consistency checks)
         # =====================================
 
-        text = extract_text(image)
-
-        print("\n===== OCR TEXT =====\n")
-
-        print(text)
-
-        print("\n====================\n")
-
-        # =====================================
-        # DATA EXTRACTION
-        # =====================================
-
-        data = extract_invoice_llm(
-            text,
-            image=image
-        )
+        data, text = extract_invoice(image)
 
         print("\n===== EXTRACTED DATA =====\n")
 

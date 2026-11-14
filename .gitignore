@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+models/layoutlmv3-gst/
+models/trial/
+.venv/
