@@ -38,7 +38,7 @@
  "entities": {
   "VENDOR_NAME": 545,
   "VENDOR_GSTIN": 300,
-  "BUYER_NAME": 271,
+  "BUYER_NAME": 326,
   "BUYER_GSTIN": 162,
   "INVOICE_NO": 300,
   "INVOICE_DATE": 300,
