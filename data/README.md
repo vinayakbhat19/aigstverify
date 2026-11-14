@@ -104,3 +104,31 @@ data/synthetic/
   align the labels before the final fine-tune.
 - A model trained only on this data will lean on these eight layouts. Measure
   on hand-labelled real invoices before trusting any accuracy number.
+
+## OCR-aligned copy (`data/synthetic_ocr`)
+
+`data/synthetic` has exact word boxes from the renderer. At inference the model
+sees OCR output instead, so `data/synthetic_ocr` holds the same invoices with
+words and boxes from the app's OCR (`utils/ocr.py`) and labels carried over by
+box overlap:
+
+```bash
+python scripts/ocr_align.py --input data/synthetic --output data/synthetic_ocr
+```
+
+Records have the same fields plus `ocr_scores`; `image` points back into
+`data/synthetic/images`. Train on this copy:
+
+```bash
+python scripts/train_layoutlmv3.py --data data/synthetic_ocr --output models/layoutlmv3-gst
+```
+
+Differences from the exact copy that the model has to cope with:
+
+- OCR sometimes glues neighbouring words ("NumberTX/9792/23-24"), so a labelled
+  word can carry a few caption characters. Clean values after extraction.
+- Characters are misread (O/0, I/1), so labelled text does not always equal the
+  ground truth in `fields`. `alignment_info.json` records how often the vendor
+  GSTIN and invoice number were read exactly.
+- Word boxes are estimated from line boxes by character count, so they are
+  approximate.
