@@ -15,7 +15,7 @@
 <table class="g"><tr>
   <td style="width:50%"><span class="b">Details of Receiver (Billed to)</span><br>Name{{ L.sep }} {{ f('BUYER_NAME', inv.buyer.name) }}<br>Address{{ L.sep }} {{ inv.buyer.line1 }}, {{ inv.buyer.line2 }}<br>
     {% if inv.buyer.gstin %}{{ L.gstin }}{{ L.sep }} {{ f('BUYER_GSTIN', inv.buyer.gstin) }}<br>{% endif %}State{{ L.sep }} {{ inv.buyer.state }} &nbsp; Code{{ L.sep }} {{ inv.buyer.state_code }}</td>
-  <td><span class="b">Details of Consignee (Shipped to)</span><br>Name{{ L.sep }} {{ inv.buyer.name }}<br>Address{{ L.sep }} {{ inv.buyer.line1 }}, {{ inv.buyer.line2 }}<br>State{{ L.sep }} {{ inv.buyer.state }} &nbsp; Code{{ L.sep }} {{ inv.buyer.state_code }}</td>
+  <td><span class="b">Details of Consignee (Shipped to)</span><br>Name{{ L.sep }} {{ f('BUYER_NAME', inv.buyer.name) }}<br>Address{{ L.sep }} {{ inv.buyer.line1 }}, {{ inv.buyer.line2 }}<br>State{{ L.sep }} {{ inv.buyer.state }} &nbsp; Code{{ L.sep }} {{ inv.buyer.state_code }}</td>
 </tr></table>
 <table class="g" style="margin-top:-1px">
   <tr><th rowspan="2">{{ L.sno }}</th><th rowspan="2">{{ L.desc }}</th><th rowspan="2">{{ L.hsn }}</th><th rowspan="2">{{ L.qty }}</th><th rowspan="2">{{ L.rate }}</th><th rowspan="2">Taxable Value</th>

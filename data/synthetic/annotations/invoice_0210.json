@@ -1457,7 +1457,7 @@
   [
    605.3,
    236.8,
-   653.0,
+   653.1,
    255.1
   ],
   [
@@ -2299,9 +2299,9 @@
   "I-BUYER_NAME",
   "I-BUYER_NAME",
   "O",
-  "O",
-  "O",
-  "O",
+  "B-BUYER_NAME",
+  "I-BUYER_NAME",
+  "I-BUYER_NAME",
   "O",
   "O",
   "O",

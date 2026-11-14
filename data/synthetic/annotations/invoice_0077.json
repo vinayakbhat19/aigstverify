@@ -1822,7 +1822,7 @@
    227.4
   ],
   [
-   856.3,
+   856.4,
    207.9,
    885.3,
    227.4
@@ -2937,10 +2937,10 @@
   "I-BUYER_NAME",
   "I-BUYER_NAME",
   "O",
-  "O",
-  "O",
-  "O",
-  "O",
+  "B-BUYER_NAME",
+  "I-BUYER_NAME",
+  "I-BUYER_NAME",
+  "I-BUYER_NAME",
   "O",
   "O",
   "O",

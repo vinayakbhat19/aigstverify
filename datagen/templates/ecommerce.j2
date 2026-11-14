@@ -24,7 +24,7 @@
 <div class="addr">
   <div><span class="b">PAN No{{ L.sep }}</span> {{ inv.vendor.pan }}<br>
     <span class="b">GST Registration No{{ L.sep }}</span> {{ f('VENDOR_GSTIN', inv.vendor.gstin) }}</div>
-  <div><span class="b">Shipping Address{{ L.sep }}</span><br>{{ inv.buyer.name }}<br>{{ inv.buyer.line1 }}<br>{{ inv.buyer.line2 }}<br>
+  <div><span class="b">Shipping Address{{ L.sep }}</span><br>{{ f('BUYER_NAME', inv.buyer.name) }}<br>{{ inv.buyer.line1 }}<br>{{ inv.buyer.line2 }}<br>
     <span class="b">Place of supply{{ L.sep }}</span> {{ inv.buyer.state|upper }}</div>
 </div>
 <div class="addr">
