@@ -116,6 +116,12 @@ async def analyse(image_path: str) -> dict:
         "gst_result": gst_result, "amount_validation": amount_validation,
     }
     finished = time.perf_counter()
+    print(f"[invoice] {Path(image_path).name}: read by {data.get('Extraction Source', '?')} in "
+          f"{finished - queued_at:.1f}s | vendor={data.get('Vendor Name')!r} gstin={gstin!r} "
+          f"no={invoice_number!r} date={data.get('Invoice Date')!r} taxable={subtotal} gst={gst_amount} "
+          f"rate={gst_percentage} total={total_amount} | fraud={fraud_score}%"
+          + (f" | why not trusted: {'; '.join(data.get('Fallback Reasons') or [])}" if data.get("Fallback Reasons") else ""),
+          flush=True)
     return {
         "invoice_key": invoice_key,
         "image_path": image_path,
