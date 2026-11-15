@@ -64,6 +64,42 @@ def reconcile(fields: dict) -> list:
     return problems
 
 
+TOTAL_CAPTION = re.compile(
+    r"(grand\s*total|invoice\s*total|total\s*amount|amount\s*payable|net\s*payable|bill\s*amount|"
+    r"net\s*amount\s*payable|total\s*payable|\btotal\b|\btot\b)", re.I)
+NOT_TOTAL = re.compile(r"sub\s*-?\s*total|total\s*(tax|gst|qty|quantity|items?|discount|savings)|before\s*tax|taxable", re.I)
+AMOUNT = re.compile(r"(?<![\d,:/-])(\d{1,3}(?:,\d{2,3})+(?:\.\d{1,2})?|\d+\.\d{2}|\d{2,7})(?![\d%:/-])")
+
+
+def total_from_text(lines: list):
+    """Last-resort total: the amount on (or right of) the lowest 'Total'-style caption.
+
+    Used only when the model found no total. Rows are rebuilt from OCR line boxes,
+    because captions and their amounts are often detected as separate lines.
+    """
+    rows = []
+    for line in lines:
+        y0, y1 = line["box"][1], line["box"][3]
+        for row in rows:
+            overlap = min(y1, row["y1"]) - max(y0, row["y0"])
+            if overlap > 0.5 * min(y1 - y0, row["y1"] - row["y0"]):
+                row["lines"].append(line)
+                break
+        else:
+            rows.append({"y0": y0, "y1": y1, "lines": [line]})
+    best = None
+    for row in rows:
+        ordered = sorted(row["lines"], key=lambda l: l["box"][0])
+        text = " ".join(l["text"] for l in ordered)
+        caption = TOTAL_CAPTION.search(text)
+        if not caption or NOT_TOTAL.search(text):
+            continue
+        amounts = [float(m.group(1).replace(",", "")) for m in AMOUNT.finditer(text[caption.end():])]
+        if amounts:
+            best = amounts[-1]  # lower rows win: the payable total is usually last
+    return best
+
+
 def review(result: dict) -> list:
     """Reasons the local extraction should not be trusted as is (empty = accept)."""
     fields, confidence = result["fields"], result["confidence"]
@@ -128,6 +164,12 @@ def extract_invoice(image, use_fallback: bool = True):
         started = time.perf_counter()
         local = layout_extractor.extract_fields(image, split_words(lines))
         log(f"layout model: {time.perf_counter() - started:.1f}s")
+        if local["fields"].get("total_amount") is None:
+            found = total_from_text(lines)
+            if found is not None:
+                # Low confidence on purpose: it fills the gap but still sends the invoice for checking.
+                local["fields"]["total_amount"], local["confidence"]["total_amount"] = found, 0.5
+                log(f"total not tagged by the model; found {found} next to a 'Total' caption")
         reasons = review(local)
         if not reasons:
             data = to_legacy(local["fields"])

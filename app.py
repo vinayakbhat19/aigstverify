@@ -1,6 +1,7 @@
 """GSTVision AI: FastAPI app for GST invoice extraction, validation and fraud scoring."""
 
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import html
 import os
 import re
@@ -43,6 +44,10 @@ MAX_BATCH = int(os.getenv("MAX_BATCH", "20"))
 # CPU, running two invoices at once took 46s for five invoices against 10s one at
 # a time, so the default is one. Raise it only on a GPU or a many-core machine.
 _extraction_slots = asyncio.Semaphore(int(os.getenv("BATCH_CONCURRENCY", "1")))
+# All model work happens on these threads, so the OCR and PyTorch thread pools
+# are always created and used from the same place.
+_extraction_pool = ThreadPoolExecutor(max_workers=int(os.getenv("BATCH_CONCURRENCY", "1")),
+                                      thread_name_prefix="extract")
 # Duplicate check and save must not interleave between invoices.
 _db_lock = asyncio.Lock()
 
@@ -81,7 +86,7 @@ async def analyse(image_path: str) -> dict:
     # Extraction is CPU-heavy: run it off the event loop, a few at a time.
     async with _extraction_slots:
         started = time.perf_counter()
-        data, text = await asyncio.to_thread(_extract, image_path)
+        data, text = await asyncio.get_running_loop().run_in_executor(_extraction_pool, _extract, image_path)
     extracted_at = time.perf_counter()
 
     gstin = data.get("GSTIN", "")
