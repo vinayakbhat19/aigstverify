@@ -1,354 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>
-        GSTVision AI
-    </title>
-
-    <link rel="stylesheet" href="/static/style.css">
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
+    <title>GSTVision AI</title>
+    <meta name="description" content="Upload Indian GST invoices to extract fields, check GSTIN and tax maths, and score fraud risk.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/glass.css">
 </head>
-<!-- AI LOADER -->
-
-<div id="loader-screen" class="loader-screen">
-
-    <div class="loader-card">
-
-        <div class="ai-spinner"></div>
-
-        <h2>
-            GSTVision AI
-        </h2>
-
-        <p id="loader-text">
-            Analyzing Invoice...
-        </p>
-
-        <div class="loader-progress">
-
-            <div class="loader-bar"></div>
-
-        </div>
-
+<body>
+    <div class="scene" aria-hidden="true">
+        <div class="scene__photo"></div>
+        <div class="scene__veil"></div>
     </div>
 
-</div>
-
-<body>
-
-    <div class="background-glow"></div>
-
-    <div class="hero">
-
-        <div class="hero-left">
-
-            <div class="logo-badge">
-                AI Powered GST Security
-            </div>
-
-            <h1>
+    <div class="page">
+        <header class="topbar">
+            <a class="brand" href="/">
+                <span class="brand__mark glass">G</span>
                 GSTVision AI
-            </h1>
+            </a>
+            <span class="pill glass">Offline extraction · Gemini fallback</span>
+        </header>
 
-            <p>
-                Intelligent GST Invoice Fraud Detection,
-                AI Compliance Verification & Financial
-                Risk Analysis Platform.
-            </p>
-
-            <div class="hero-buttons">
-
-                <button class="primary-btn">
-                    AI Fraud Detection
-                </button>
-
-                <button class="secondary-btn">
-                    GST Verification Engine
-                </button>
-
-            </div>
-
-            <div class="stats-grid">
-
-                <div class="stat-card">
-                    <h2>15K+</h2>
-                    <p>Invoices Analyzed</p>
-                </div>
-
-                <div class="stat-card">
-                    <h2>Gemini AI</h2>
-                    <p>Invoice Intelligence</p>
-                </div>
-
-                <div class="stat-card">
-                    <h2>XGBoost</h2>
-                    <p>Fraud Risk Engine</p>
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="hero-right">
-
-            <div class="dashboard-preview">
-
-                <div class="mini-card fraud-card">
-
-                    <div class="ring-wrap">
-
-                        <svg width="180" height="180">
-
-                            <circle cx="90" cy="90" r="70" stroke="#1f2937" stroke-width="15" fill="none" />
-
-                            <circle cx="90" cy="90" r="70" stroke="#10b981" stroke-width="15" fill="none"
-                                stroke-dasharray="440" stroke-dashoffset="90" stroke-linecap="round"
-                                transform="rotate(-90 90 90)" />
-
-                            <text x="50%" y="50%" text-anchor="middle" dy="10" class="ring-text">
-                                LOW
-                            </text>
-
-                        </svg>
-
-                    </div>
-
-                    <h3>
-                        AI Fraud Risk
-                    </h3>
-
-                    <p>
-                        Multi-Layer GST Validation
+        <main class="center">
+            <section class="card glass glass--sheen" data-tilt id="card">
+                <div class="form-area">
+                    <h1>Check a GST invoice</h1>
+                    <p class="lede">
+                        Drop one invoice for a full report, or several to check them together.
+                        Fields are read on this machine; Gemini is used only when the result looks uncertain.
                     </p>
 
+                    <!-- One file goes to /upload as a normal form post; several go to /upload-batch. -->
+                    <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+                        <label class="drop" id="drop">
+                            <input type="file" name="file" id="file-input" accept="image/png,image/jpeg,image/webp" multiple required>
+                            <div class="drop__icon glass" aria-hidden="true">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>
+                                </svg>
+                            </div>
+                            <div class="drop__title">Drop invoices here or browse</div>
+                            <div class="drop__hint">JPG, PNG or WebP · photos and scans · up to 20 at once</div>
+                        </label>
+                        <p class="files" id="file-list" aria-live="polite"></p>
+
+                        <div class="actions">
+                            <button type="submit" class="btn" id="analyze" disabled>Analyze invoice</button>
+                        </div>
+                    </form>
+
+                    <div class="meta">
+                        <span class="pill glass">GSTIN checksum</span>
+                        <span class="pill glass">Tax maths</span>
+                        <span class="pill glass">Duplicate check</span>
+                        <span class="pill glass">Fraud score</span>
+                    </div>
                 </div>
 
-                <div class="floating-card glass-card">
-
-                    <div class="status-row">
-                        <span>GST Validation</span>
-                        <span class="green-dot"></span>
-                    </div>
-
-                    <div class="status-row">
-                        <span>Invoice OCR</span>
-                        <span class="green-dot"></span>
-                    </div>
-
-                    <div class="status-row">
-                        <span>Fraud Detection</span>
-                        <span class="green-dot"></span>
-                    </div>
-
-                    <div class="status-row">
-                        <span>AI Confidence</span>
-                        <span class="blue-badge">98%</span>
-                    </div>
-
+                <div class="working" role="status">
+                    <div class="spinner" aria-hidden="true"></div>
+                    <div class="working__step" id="step">Reading the invoice…</div>
                 </div>
+            </section>
+        </main>
 
+        <section class="results glass" id="results" aria-live="polite">
+            <div class="results__head">
+                <h2 id="results-title">Batch results</h2>
+                <span id="results-summary"></span>
             </div>
-
-        </div>
-
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>File</th><th>Vendor</th><th>GSTIN</th><th>Invoice no.</th>
+                            <th>Total (₹)</th><th>GST %</th><th>Risk</th><th>Read by</th><th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-body"></tbody>
+                </table>
+            </div>
+        </section>
     </div>
 
-    <div class="upload-section glass-panel">
-
-        <div class="upload-box">
-
-            <div class="upload-icon">
-                ⬆
-            </div>
-
-            <h2>
-                Upload GST Invoice
-            </h2>
-
-            <p>
-                PNG • JPG • PDF Supported
-            </p>
-
-            <form action="/upload" method="post" enctype="multipart/form-data">
-
-                <input type="file" name="file" required>
-
-                <button type="submit" class="analyze-btn">
-                    Analyze Invoice
-                </button>
-
-            </form>
-
-            <h2 style="margin-top:32px">
-                Batch Upload
-            </h2>
-
-            <p>
-                Select several invoices to process them together
-            </p>
-
-            <form id="batch-form">
-
-                <input type="file" name="files" id="batch-files" accept="image/*" multiple required>
-
-                <button type="submit" class="analyze-btn">
-                    Analyze Batch
-                </button>
-
-            </form>
-
-            <div id="batch-results" style="margin-top:20px; overflow-x:auto; text-align:left;"></div>
-
-        </div>
-
-    </div>
-
-    <div class="tech-stack glass-panel">
-
-        <h2>
-            Powered By
-        </h2>
-
-        <div class="tech-grid">
-
-            <div class="tech-item">
-                LayoutLMv3
-            </div>
-
-            <div class="tech-item">
-                Gemini (fallback)
-            </div>
-
-            <div class="tech-item">
-                FastAPI
-            </div>
-
-            <div class="tech-item">
-                PaddleOCR
-            </div>
-
-            <div class="tech-item">
-                XGBoost
-            </div>
-
-            <div class="tech-item">
-                SQLite
-            </div>
-
-            <div class="tech-item">
-                ReportLab
-            </div>
-
-        </div>
-
-    </div>
+    <script src="/static/motion.js"></script>
     <script>
+        const form = document.getElementById("upload-form");
+        const input = document.getElementById("file-input");
+        const drop = document.getElementById("drop");
+        const list = document.getElementById("file-list");
+        const button = document.getElementById("analyze");
+        const card = document.getElementById("card");
+        const step = document.getElementById("step");
+        const results = document.getElementById("results");
+        const body = document.getElementById("results-body");
+        const MAX = 20;
 
-        const form = document.querySelector("form");
+        const steps = ["Reading the invoice…", "Finding GST fields…", "Checking GSTIN and tax maths…",
+                       "Looking for duplicates…", "Scoring fraud risk…"];
+        let stepTimer = null;
 
-        const loaderScreen = document.getElementById(
-            "loader-screen"
-        );
-
-        const loaderText = document.getElementById(
-            "loader-text"
-        );
-
-        const messages = [
-
-            "Analyzing Invoice...",
-
-            "Extracting GST Details...",
-
-            "Running OCR Engine...",
-
-            "Verifying GSTIN...",
-
-            "Running Fraud Detection...",
-
-            "Generating AI Report..."
-        ];
-
-        let index = 0;
-
-        setInterval(() => {
-
-            loaderText.innerText =
-                messages[index];
-
-            index = (
-                index + 1
-            ) % messages.length;
-
-        }, 1800);
-
-        form.addEventListener(
-
-            "submit",
-
-            () => {
-
-                loaderScreen.style.display =
-                    "flex";
+        function busy(on) {
+            card.classList.toggle("is-busy", on);
+            clearInterval(stepTimer);
+            if (on) {
+                let i = 0;
+                step.textContent = steps[0];
+                stepTimer = setInterval(() => { i = (i + 1) % steps.length; step.textContent = steps[i]; }, 1600);
             }
-        );
-
-
-        const batchForm = document.getElementById("batch-form");
-        const batchResults = document.getElementById("batch-results");
-
-        function cell(row, value) {
-            const td = document.createElement("td");
-            td.textContent = value;
-            td.style.padding = "6px 10px";
-            td.style.borderBottom = "1px solid rgba(128,128,128,0.3)";
-            row.appendChild(td);
         }
 
-        batchForm.addEventListener("submit", async (event) => {
+        function refresh() {
+            const count = input.files.length;
+            button.disabled = count === 0 || count > MAX;
+            if (count === 0) { list.textContent = ""; button.textContent = "Analyze invoice"; return; }
+            if (count > MAX) { list.textContent = `Choose ${MAX} or fewer invoices.`; return; }
+            const names = Array.from(input.files).map((f) => f.name);
+            list.textContent = count === 1 ? names[0] : `${count} invoices: ${names.slice(0, 3).join(", ")}${count > 3 ? "…" : ""}`;
+            button.textContent = count === 1 ? "Analyze invoice" : `Analyze ${count} invoices`;
+        }
+
+        input.addEventListener("change", refresh);
+
+        ["dragenter", "dragover"].forEach((type) => drop.addEventListener(type, (event) => {
             event.preventDefault();
-            loaderScreen.style.display = "flex";
-            batchResults.textContent = "";
+            drop.classList.add("is-over");
+        }));
+        ["dragleave", "drop"].forEach((type) => drop.addEventListener(type, () => drop.classList.remove("is-over")));
+        drop.addEventListener("drop", (event) => {
+            event.preventDefault();
+            if (event.dataTransfer.files.length) { input.files = event.dataTransfer.files; refresh(); }
+        });
+
+        function cell(row, text, className) {
+            const td = row.insertCell();
+            td.textContent = text;
+            if (className) td.className = className;
+            return td;
+        }
+
+        function riskTag(row, r) {
+            const td = row.insertCell();
+            const tag = document.createElement("span");
+            const tone = r.fraud_score > 70 ? "bad" : r.fraud_score > 40 ? "warn" : "ok";
+            tag.className = `tag tag--${tone}`;
+            tag.textContent = `${r.fraud_score}% ${r.risk_level || ""}`.trim();
+            td.appendChild(tag);
+        }
+
+        const sourceLabel = { "layoutlmv3": "Local model", "gemini": "Gemini",
+                              "layoutlmv3-unverified": "Local (unverified)", "none": "Not read" };
+
+        form.addEventListener("submit", async (event) => {
+            if (input.files.length <= 1) { busy(true); return; }  // normal post to /upload
+
+            event.preventDefault();
+            busy(true);
+            results.classList.remove("is-shown");
+            body.textContent = "";
             try {
-                const response = await fetch("/upload-batch", { method: "POST", body: new FormData(batchForm) });
-                const body = await response.json();
-                if (body.error) { batchResults.textContent = body.error; return; }
+                const data = new FormData();
+                for (const file of input.files) data.append("files", file);
+                const response = await fetch("/upload-batch", { method: "POST", body: data });
+                const payload = await response.json();
+                if (payload.error) throw new Error(payload.error);
 
-                const summary = document.createElement("p");
-                summary.textContent = `${body.succeeded} of ${body.count} invoices processed in ${body.seconds}s`;
-                batchResults.appendChild(summary);
-
-                const table = document.createElement("table");
-                table.style.borderCollapse = "collapse";
-                table.style.width = "100%";
-                const head = table.insertRow();
-                ["File", "Vendor", "GSTIN", "Invoice No", "Total", "GST %", "Risk", "Status", "Source", "Time"]
-                    .forEach((title) => { cell(head, title); head.lastChild.style.fontWeight = "bold"; });
-                for (const r of body.results) {
-                    const row = table.insertRow();
-                    if (!r.ok) { cell(row, r.file); cell(row, r.error); row.lastChild.colSpan = 9; continue; }
-                    [r.file, r.vendor, r.gstin, r.invoice_number, r.total.toFixed(2), r.gst_percentage,
-                     `${r.fraud_score}% (${r.risk_level})`, r.status, r.extraction_source, `${r.seconds.total}s`]
-                        .forEach((value) => cell(row, value));
+                document.getElementById("results-summary").textContent =
+                    `${payload.succeeded} of ${payload.count} read · ${payload.seconds}s`;
+                for (const r of payload.results) {
+                    const row = body.insertRow();
+                    cell(row, r.file).title = r.file;
+                    if (!r.ok) { const td = cell(row, `Could not read: ${r.error}`); td.colSpan = 8; continue; }
+                    cell(row, r.vendor);
+                    cell(row, r.gstin || "—");
+                    cell(row, r.invoice_number || "—");
+                    cell(row, r.total.toLocaleString("en-IN", { minimumFractionDigits: 2 }), "num");
+                    cell(row, r.gst_percentage ? `${r.gst_percentage}%` : "—", "num");
+                    riskTag(row, r);
+                    cell(row, sourceLabel[r.extraction_source] || r.extraction_source);
+                    cell(row, `${r.seconds.total}s`, "num");
                 }
-                batchResults.appendChild(table);
+                results.classList.add("is-shown");
+                results.scrollIntoView({ behavior: "smooth", block: "start" });
             } catch (error) {
-                batchResults.textContent = "Batch failed: " + error;
+                list.textContent = `The batch failed: ${error.message}. Try again with fewer files.`;
             } finally {
-                loaderScreen.style.display = "none";
+                busy(false);
             }
         });
 
+        // Coming back with the browser's Back button should not leave the spinner up.
+        window.addEventListener("pageshow", () => busy(false));
     </script>
-
 </body>
-
 </html>

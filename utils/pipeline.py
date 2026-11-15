@@ -51,7 +51,10 @@ def reconcile(fields: dict) -> list:
     elif taxable and gst is not None:
         implied = 100 * gst / taxable
         nearest = min(SLABS, key=lambda slab: abs(slab - implied))
-        rate = nearest if abs(nearest - implied) <= 0.3 else round(implied, 2)
+        # Only report a rate that is close to a real slab; anything else means misread amounts.
+        rate = nearest if abs(nearest - implied) <= 0.3 else None
+        if rate is None:
+            problems.append(f"tax is {implied:.1f}% of taxable value, which is not a GST slab")
     fields["gst_rate"] = rate
     return problems
 

@@ -158,22 +158,41 @@ async def upload_invoice(request: Request, file: UploadFile = File(...)):
         return error_page(f"{type(error).__name__}: {error}")
 
     data = result["data"]
+    fraud = result["fraud"]
+    source = data.get("Extraction Source", "")
     return templates.TemplateResponse(request, "report.html", {
-        "fraud_score": result["fraud_score"],
         "invoice_key": result["invoice_key"],
-        "report": {
-            "invoice": {
-                "vendor": data.get("Vendor Name", "Unknown"),
-                "gstin": data.get("GSTIN", ""),
-                "invoice_number": data.get("Invoice Number", ""),
-                "total": result["total_amount"],
-            },
-            "gst_validation": result["gst_validation"].get("message", ""),
-            "gst_api": result["gst_api"].get("status", ""),
-            "gst_rule_check": result["gst_result"].get("message", ""),
-            "fraud_analysis": result["fraud"].get("status", ""),
-        },
         "image_path": result["image_path"],
+        "score": result["fraud_score"],
+        "status": fraud.get("status", ""),
+        "risk_level": fraud.get("risk_level", ""),
+        "assessment": fraud.get("final_assessment", ""),
+        "invoice": {
+            "vendor": data.get("Vendor Name") or "Unknown",
+            "gstin": data.get("GSTIN") or "Not found",
+            "number": data.get("Invoice Number") or "Not found",
+            "date": data.get("Invoice Date") or "Not found",
+            "buyer": data.get("Buyer Name") or "",
+            "buyer_gstin": data.get("Buyer GSTIN") or "",
+            "category": result["category"] or "General",
+            "subtotal": clean_number(data.get("Subtotal", 0)),
+            "gst_amount": clean_number(data.get("GST Amount", 0)),
+            "gst_rate": clean_number(data.get("GST Percentage", 0)),
+            "total": result["total_amount"],
+        },
+        "checks": [
+            ("GSTIN format", result["gst_validation"]["valid"], result["gst_validation"].get("message", "")),
+            ("GST rate for category", result["gst_result"]["valid"], result["gst_result"].get("message", "")),
+            ("Totals add up", result["amount_validation"]["valid"], result["amount_validation"].get("message", "")),
+            ("Not a duplicate", not result["duplicate"],
+             "Seen before with the same GSTIN and number" if result["duplicate"] else "First time this invoice is seen"),
+        ],
+        "gst_api": result["gst_api"].get("status", ""),
+        "warnings": fraud.get("warnings", []),
+        "source": {"layoutlmv3": "Local model", "gemini": "Gemini (fallback)",
+                   "layoutlmv3-unverified": "Local model, unverified", "none": "Not read"}.get(source, source),
+        "fallback_reasons": data.get("Fallback Reasons", []),
+        "seconds": result["seconds"],
     })
 
 

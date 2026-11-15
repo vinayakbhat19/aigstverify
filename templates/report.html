@@ -1,180 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>GSTVision AI Report</title>
-
-    <link rel="stylesheet" href="/static/report.css">
-
+    <title>Invoice Report · GSTVision AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/glass.css">
 </head>
+<body>
+    {%- macro inr(value) -%}₹ {{ "{:,.2f}".format(value) }}{%- endmacro -%}
+    {%- set tone = "var(--bad)" if score > 70 else ("var(--warn)" if score > 40 else "var(--ok)") -%}
 
-<body class="dark">
-
-    <div class="header">
-
-        <h1>GSTVision AI Report</h1>
-
-        <p>
-            AI-Powered GST Invoice Fraud Detection &
-            Compliance Verification
-        </p>
-
+    <div class="scene" aria-hidden="true">
+        <div class="scene__photo"></div>
+        <div class="scene__veil"></div>
     </div>
 
-    <div class="grid">
+    <div class="page">
+        <header class="topbar">
+            <a class="brand" href="/">
+                <span class="brand__mark glass">G</span>
+                GSTVision AI
+            </a>
+            <a class="btn btn--ghost glass" href="/">Check another invoice</a>
+        </header>
 
-        <!-- FRAUD METER -->
-
-        <div class="card">
-
-            <h2>AI Fraud Meter</h2>
-
-            <div class="gauge-container">
-
-                <div class="gauge" style="--score: {{ fraud_score }}">
-
-                    <div class="gauge-text">
-
-                        <h1>{{ fraud_score }}%</h1>
-
-                        <p>Fraud Risk</p>
-
+        <main class="report">
+            <div class="stack">
+                <section class="panel glass glass--sheen">
+                    <h2>FRAUD RISK</h2>
+                    <div class="ring" style="--score: {{ score }}; --tone: {{ tone }};"
+                         role="img" aria-label="Fraud risk {{ score }} percent">
+                        <div>
+                            <div class="ring__value">{{ score }}%</div>
+                            <div class="ring__label">{{ risk_level }} risk</div>
+                        </div>
                     </div>
+                    <div class="verdict">
+                        {{ "Needs manual review" if status == "Suspicious" else "Looks genuine" }}
+                        <small>{{ assessment }}</small>
+                    </div>
+                    <form action="/generate-report" method="post" class="actions">
+                        <input type="hidden" name="invoice_key" value="{{ invoice_key }}">
+                        <button type="submit" class="btn">Download PDF report</button>
+                    </form>
+                </section>
 
-                </div>
-
-            </div>
-
-            <div class="status-box">
-
-                <div class="status-item">
-
-                    <span>GST Verified</span>
-
-                    <span class="success">
-                        ✔ VERIFIED
-                    </span>
-
-                </div>
-
-                <div class="status-item">
-
-                    <span>GSTIN Status</span>
-
-                    <span class="success">
-                        ✔ ACTIVE
-                    </span>
-
-                </div>
-
-                <div class="status-item">
-
-                    <span>Fraud Status</span>
-
-                    <span class="
-                    {% if fraud_score > 70 %}
-                        danger
-                    {% elif fraud_score > 40 %}
-                        warning
-                    {% else %}
-                        success
+                <section class="panel glass glass--sheen">
+                    <h2>HOW IT WAS READ</h2>
+                    <div class="rows">
+                        <div class="row"><span>Fields read by</span><span>{{ source }}</span></div>
+                        <div class="row"><span>Time</span><span>{{ seconds.total }} s</span></div>
+                        <div class="row"><span>GSTIN registry</span><span>{{ gst_api or "Not checked" }}</span></div>
+                    </div>
+                    {% if fallback_reasons %}
+                    <p class="note">
+                        {% if source.startswith("Gemini") %}The local model was not confident, so Gemini re-read it:{% else %}Treat these values with care:{% endif %}
+                        {{ fallback_reasons | join("; ") }}.
+                    </p>
                     {% endif %}
-                    ">
-
-                        {% if fraud_score > 70 %}
-                        HIGH RISK
-                        {% elif fraud_score > 40 %}
-                        SUSPICIOUS
-                        {% else %}
-                        SAFE
-                        {% endif %}
-
-                    </span>
-
-                </div>
-
+                </section>
             </div>
 
-        </div>
+            <div class="stack">
+                <section class="panel glass glass--sheen">
+                    <h2>INVOICE</h2>
+                    <div class="two">
+                        <div class="rows">
+                            <div class="row"><span>Vendor</span><span>{{ invoice.vendor }}</span></div>
+                            <div class="row"><span>GSTIN</span><span>{{ invoice.gstin }}</span></div>
+                            <div class="row"><span>Invoice no.</span><span>{{ invoice.number }}</span></div>
+                            <div class="row"><span>Date</span><span>{{ invoice.date }}</span></div>
+                            {% if invoice.buyer %}<div class="row"><span>Buyer</span><span>{{ invoice.buyer }}</span></div>{% endif %}
+                            {% if invoice.buyer_gstin %}<div class="row"><span>Buyer GSTIN</span><span>{{ invoice.buyer_gstin }}</span></div>{% endif %}
+                        </div>
+                        <div class="rows">
+                            <div class="row"><span>Taxable value</span><span>{{ inr(invoice.subtotal) }}</span></div>
+                            <div class="row"><span>GST{% if invoice.gst_rate %} @ {{ invoice.gst_rate | round(2) }}%{% endif %}</span><span>{{ inr(invoice.gst_amount) }}</span></div>
+                            <div class="row"><span>Total</span><span>{{ inr(invoice.total) }}</span></div>
+                            <div class="row"><span>Category</span><span>{{ invoice.category }}</span></div>
+                        </div>
+                    </div>
+                </section>
 
-        <!-- INVOICE DETAILS -->
+                <section class="panel glass glass--sheen">
+                    <h2>CHECKS</h2>
+                    <ul class="checks">
+                        {% for name, passed, detail in checks %}
+                        <li>
+                            <span class="dot {{ 'dot--ok' if passed else 'dot--bad' }}" aria-hidden="true">{{ "✓" if passed else "!" }}</span>
+                            <span><strong>{{ name }}</strong> · {{ "passed" if passed else "failed" }}<br>
+                                  <span style="color: var(--ink-soft)">{{ detail }}</span></span>
+                        </li>
+                        {% endfor %}
+                        {% for warning in warnings %}
+                        <li><span class="dot dot--warn" aria-hidden="true">!</span><span>{{ warning }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </section>
 
-        <div class="card">
-
-            <h2>Invoice Details</h2>
-
-            <div class="item">
-                <span>Vendor</span>
-                <span>{{ report["invoice"]["vendor"] }}</span>
+                <section class="panel glass">
+                    <h2>INVOICE IMAGE</h2>
+                    <img src="/{{ image_path }}" class="preview" alt="Uploaded invoice">
+                </section>
             </div>
-
-            <div class="item">
-                <span>GSTIN</span>
-                <span>{{ report["invoice"]["gstin"] }}</span>
-            </div>
-
-            <div class="item">
-                <span>Invoice Number</span>
-                <span>{{ report["invoice"]["invoice_number"] }}</span>
-            </div>
-
-            <div class="item">
-                <span>Total Amount</span>
-                <span>₹ {{ report["invoice"]["total"] }}</span>
-            </div>
-
-            <div class="item">
-                <span>GST Validation</span>
-                <span>{{ report["gst_validation"] }}</span>
-            </div>
-
-            <div class="item">
-                <span>GST API</span>
-                <span>{{ report["gst_api"] }}</span>
-            </div>
-
-            <div class="item">
-                <span>GST Rule Check</span>
-                <span>{{ report["gst_rule_check"] }}</span>
-            </div>
-
-            <div class="item">
-                <span>Fraud Analysis</span>
-                <span>{{ report["fraud_analysis"] }}</span>
-            </div>
-
-            <br>
-
-            <form action="/generate-report" method="POST">
-                <input
-                    type="hidden"
-                    name="invoice_key"
-                    value="{{ invoice_key }}"
-                >
-                <button type="submit">
-                    Download PDF Report
-                </button>
-            </form>
-
-        </div>
-
-        <!-- INVOICE PREVIEW -->
-
-        <div class="card">
-
-            <h2>Invoice Preview</h2>
-
-            <img src="/{{ image_path }}" class="invoice-image">
-
-        </div>
-
+        </main>
     </div>
 
+    <script src="/static/motion.js"></script>
 </body>
-
 </html>
