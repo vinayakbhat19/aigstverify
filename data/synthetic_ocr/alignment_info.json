@@ -1,9 +1,9 @@
 {
  "invoices": 300,
- "ocr_words": 39763,
- "entities_recovered": 0.9405,
+ "ocr_words": 39764,
+ "entities_recovered": 0.9411,
  "vendor_gstin_read_exactly": 0.8867,
  "invoice_no_read_exactly": 0.8867,
- "ocr_seconds_median": 2.01,
- "ocr_seconds_p95": 5.75
+ "ocr_seconds_median": 1.62,
+ "ocr_seconds_p95": 2.37
 }
