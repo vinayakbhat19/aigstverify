@@ -39,9 +39,10 @@ app.mount("/reports", StaticFiles(directory="reports"), name="reports")
 report_cache = {}
 
 MAX_BATCH = int(os.getenv("MAX_BATCH", "20"))
-# OCR and the layout model already use several CPU threads each, so running
-# many invoices at once only makes them fight for cores.
-_extraction_slots = asyncio.Semaphore(int(os.getenv("BATCH_CONCURRENCY", "2")))
+# OCR and the layout model each use every CPU core already. Measured on a 4-core
+# CPU, running two invoices at once took 46s for five invoices against 10s one at
+# a time, so the default is one. Raise it only on a GPU or a many-core machine.
+_extraction_slots = asyncio.Semaphore(int(os.getenv("BATCH_CONCURRENCY", "1")))
 # Duplicate check and save must not interleave between invoices.
 _db_lock = asyncio.Lock()
 
@@ -75,10 +76,11 @@ def _extract(image_path: str):
 
 async def analyse(image_path: str) -> dict:
     """Runs the whole pipeline for one stored invoice image."""
-    started = time.perf_counter()
+    queued_at = time.perf_counter()
 
     # Extraction is CPU-heavy: run it off the event loop, a few at a time.
     async with _extraction_slots:
+        started = time.perf_counter()
         data, text = await asyncio.to_thread(_extract, image_path)
     extracted_at = time.perf_counter()
 
@@ -127,9 +129,10 @@ async def analyse(image_path: str) -> dict:
         "gst_result": gst_result,
         "amount_validation": amount_validation,
         "category": product.get("category", ""),
-        "seconds": {"extraction": round(extracted_at - started, 2),
+        "seconds": {"queued": round(started - queued_at, 2),
+                    "extraction": round(extracted_at - started, 2),
                     "checks": round(finished - extracted_at, 2),
-                    "total": round(finished - started, 2)},
+                    "total": round(finished - queued_at, 2)},
     }
 
 

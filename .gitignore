@@ -3,3 +3,5 @@ __pycache__/
 models/layoutlmv3-gst/
 models/trial/
 .venv/
+uploads/*
+reports/*
