@@ -187,6 +187,26 @@
 
             </form>
 
+            <h2 style="margin-top:32px">
+                Batch Upload
+            </h2>
+
+            <p>
+                Select several invoices to process them together
+            </p>
+
+            <form id="batch-form">
+
+                <input type="file" name="files" id="batch-files" accept="image/*" multiple required>
+
+                <button type="submit" class="analyze-btn">
+                    Analyze Batch
+                </button>
+
+            </form>
+
+            <div id="batch-results" style="margin-top:20px; overflow-x:auto; text-align:left;"></div>
+
         </div>
 
     </div>
@@ -200,7 +220,11 @@
         <div class="tech-grid">
 
             <div class="tech-item">
-                Gemini AI
+                LayoutLMv3
+            </div>
+
+            <div class="tech-item">
+                Gemini (fallback)
             </div>
 
             <div class="tech-item">
@@ -208,7 +232,7 @@
             </div>
 
             <div class="tech-item">
-                EasyOCR
+                PaddleOCR
             </div>
 
             <div class="tech-item">
@@ -276,6 +300,52 @@
                     "flex";
             }
         );
+
+
+        const batchForm = document.getElementById("batch-form");
+        const batchResults = document.getElementById("batch-results");
+
+        function cell(row, value) {
+            const td = document.createElement("td");
+            td.textContent = value;
+            td.style.padding = "6px 10px";
+            td.style.borderBottom = "1px solid rgba(128,128,128,0.3)";
+            row.appendChild(td);
+        }
+
+        batchForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            loaderScreen.style.display = "flex";
+            batchResults.textContent = "";
+            try {
+                const response = await fetch("/upload-batch", { method: "POST", body: new FormData(batchForm) });
+                const body = await response.json();
+                if (body.error) { batchResults.textContent = body.error; return; }
+
+                const summary = document.createElement("p");
+                summary.textContent = `${body.succeeded} of ${body.count} invoices processed in ${body.seconds}s`;
+                batchResults.appendChild(summary);
+
+                const table = document.createElement("table");
+                table.style.borderCollapse = "collapse";
+                table.style.width = "100%";
+                const head = table.insertRow();
+                ["File", "Vendor", "GSTIN", "Invoice No", "Total", "GST %", "Risk", "Status", "Source", "Time"]
+                    .forEach((title) => { cell(head, title); head.lastChild.style.fontWeight = "bold"; });
+                for (const r of body.results) {
+                    const row = table.insertRow();
+                    if (!r.ok) { cell(row, r.file); cell(row, r.error); row.lastChild.colSpan = 9; continue; }
+                    [r.file, r.vendor, r.gstin, r.invoice_number, r.total.toFixed(2), r.gst_percentage,
+                     `${r.fraud_score}% (${r.risk_level})`, r.status, r.extraction_source, `${r.seconds.total}s`]
+                        .forEach((value) => cell(row, value));
+                }
+                batchResults.appendChild(table);
+            } catch (error) {
+                batchResults.textContent = "Batch failed: " + error;
+            } finally {
+                loaderScreen.style.display = "none";
+            }
+        });
 
     </script>
 
