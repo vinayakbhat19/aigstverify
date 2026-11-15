@@ -36,7 +36,11 @@ def _load():
 
     processor = AutoProcessor.from_pretrained(MODEL_DIR, apply_ocr=False)
     model = AutoModelForTokenClassification.from_pretrained(MODEL_DIR)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # LAYOUT_DEVICE=mps uses the Apple GPU; the default is CPU, which is reliable everywhere.
+    device = os.getenv("LAYOUT_DEVICE") or ("cuda" if torch.cuda.is_available() else "cpu")
+    # ONNX Runtime (OCR) and PyTorch each start their own thread pool; capping
+    # PyTorch avoids the two oversubscribing the CPU when they run back to back.
+    torch.set_num_threads(int(os.getenv("LAYOUT_THREADS", max(1, (os.cpu_count() or 4) // 2))))
     return processor, model.to(device).eval(), device
 
 

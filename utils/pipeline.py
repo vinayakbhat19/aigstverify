@@ -8,10 +8,15 @@ reasons are recorded either way.
 
 import os
 import re
+import time
 
 from utils import layout_extractor
 from utils.ocr import extract_lines, split_words
 from utils.validator import gstin_checksum_ok
+
+def log(message: str):
+    print(f"[pipeline] {message}", flush=True)
+
 
 MIN_CONFIDENCE = float(os.getenv("EXTRACTION_MIN_CONFIDENCE", "0.80"))
 REQUIRED = ("vendor_gstin", "invoice_no", "total_amount")
@@ -113,12 +118,16 @@ def extract_invoice(image, use_fallback: bool = True):
     "Extraction Source" ("layoutlmv3" | "gemini" | "layoutlmv3-unverified"),
     "Fallback Reasons" and "Field Confidence".
     """
+    started = time.perf_counter()
     lines = extract_lines(image)
+    log(f"OCR: {len(lines)} lines in {time.perf_counter() - started:.1f}s")
     text = "\n".join(line["text"] for line in lines)
     local, reasons = None, ["local model not installed"]
 
     if layout_extractor.model_available():
+        started = time.perf_counter()
         local = layout_extractor.extract_fields(image, split_words(lines))
+        log(f"layout model: {time.perf_counter() - started:.1f}s")
         reasons = review(local)
         if not reasons:
             data = to_legacy(local["fields"])
@@ -129,6 +138,7 @@ def extract_invoice(image, use_fallback: bool = True):
     if use_fallback and _gemini_configured():
         from utils.llm_extractor import extract_invoice_llm
 
+        log("local result not trusted, asking Gemini: " + "; ".join(reasons))
         data = extract_invoice_llm(text, image=image)
         if "error" not in data:
             # A locally read GSTIN that passes its checksum beats a re-read.
