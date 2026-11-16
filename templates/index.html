@@ -22,7 +22,7 @@
                 <span class="brand__mark glass">G</span>
                 GSTVision AI
             </a>
-            <span class="pill glass">Offline extraction · Gemini fallback</span>
+            <span class="pill glass">Runs on this machine</span>
         </header>
 
         <main class="center">
@@ -31,7 +31,7 @@
                     <h1>Check a GST invoice</h1>
                     <p class="lede">
                         Drop one invoice for a full report, or several to check them together.
-                        Fields are read on this machine; Gemini is used only when the result looks uncertain.
+                        Fields are read on this machine, then the GSTIN, tax maths, registry and QR code are checked.
                     </p>
 
                     <!-- One file goes to /upload as a normal form post; several go to /upload-batch. -->
@@ -58,6 +58,7 @@
                         <span class="pill glass">GSTIN checksum</span>
                         <span class="pill glass">Tax maths</span>
                         <span class="pill glass">Duplicate check</span>
+                        <span class="pill glass">QR code</span>
                         <span class="pill glass">Fraud score</span>
                     </div>
                 </div>

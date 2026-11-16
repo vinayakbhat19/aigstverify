@@ -23,25 +23,44 @@ REQUIRED = ("vendor_gstin", "invoice_no", "total_amount")
 SLABS = (0, 0.25, 3, 5, 12, 18, 28, 40)
 
 
-def reconcile(fields: dict) -> list:
-    """Fills amounts that follow from the others and returns the problems that remain."""
+def reconcile(fields: dict, confidence: dict = None) -> list:
+    """Fills amounts that follow from the others and returns the problems that remain.
+
+    A derived amount is only as trustworthy as the amounts it came from, so its
+    confidence is the lowest of theirs (written into confidence when given).
+    """
     problems = []
+    confidence = confidence if confidence is not None else {}
+    conf = lambda key: confidence.get(key, 0.0)
     total, taxable = fields.get("total_amount"), fields.get("taxable_value")
     taxes = [fields.get(k) for k in ("cgst_amount", "sgst_amount", "igst_amount")]
     # CGST and SGST are always equal, so one implies the other.
     if taxes[0] is not None and taxes[1] is None:
         taxes[1] = fields["sgst_amount"] = taxes[0]
+        confidence["sgst_amount"] = conf("cgst_amount")
     elif taxes[1] is not None and taxes[0] is None:
         taxes[0] = fields["cgst_amount"] = taxes[1]
+        confidence["cgst_amount"] = conf("sgst_amount")
     gst = sum(t for t in taxes if t is not None) if any(t is not None for t in taxes) else None
+    used = [k for k, t in zip(("cgst_amount", "sgst_amount", "igst_amount"), taxes) if t is not None]
+    gst_conf = min((conf(k) for k in used), default=0.0)
 
     if total is not None and taxable is not None and gst is None:
         gst = round(total - taxable, 2)
+        gst_conf = min(conf("total_amount"), conf("taxable_value"))
         problems.append("tax amount not read; taken as total minus taxable value")
     elif total is not None and gst is not None and taxable is None:
-        taxable = fields["taxable_value"] = round(total - gst, 2)
+        taxable = round(total - gst, 2)
+        confidence["taxable_value"] = min(conf("total_amount"), gst_conf)
         problems.append("taxable value not read; taken as total minus tax")
+        if taxable <= 0:
+            taxable = None
+            problems.append("tax read as larger than the total, so it is a misread")
+        fields["taxable_value"] = taxable
+    if gst is not None and gst < 0:
+        gst = None
     fields["gst_amount"] = gst
+    confidence["gst_amount"] = gst_conf if gst is not None else 0.0
 
     if total is None or taxable is None or gst is None:
         problems.append("amounts incomplete")
@@ -111,17 +130,15 @@ def review(result: dict) -> list:
             reasons.append(f"{name} low confidence ({confidence[name]:.2f})")
     if fields.get("vendor_gstin") and not gstin_checksum_ok(fields["vendor_gstin"]):
         reasons.append("vendor GSTIN fails checksum (misread or invalid)")
-    reasons += [p for p in reconcile(fields) if not p.startswith(("tax amount not read", "taxable value not read"))]
+    reasons += [p for p in reconcile(fields, confidence) if not p.startswith(("tax amount not read", "taxable value not read"))]
     return reasons
 
 
 def guess_category(items: list) -> str:
-    """Category from item descriptions, using the app's keyword-to-rate table (no API call)."""
-    from utils.product_classifier import GST_RATES
+    """Category from item descriptions, using the rate table's keywords (no API call)."""
+    from utils.gst_rates import find_category
 
-    text = " ".join(items).lower()
-    matches = [key for key in GST_RATES if re.search(rf"\b{re.escape(key)}\b", text)]
-    return max(matches, key=len) if matches else ""
+    return find_category(" ".join(items))
 
 
 def to_legacy(fields: dict) -> dict:
@@ -135,6 +152,7 @@ def to_legacy(fields: dict) -> dict:
         "GST Amount": fields.get("gst_amount") or 0,
         "GST Percentage": fields.get("gst_rate") or 0,
         "Detected Products": fields.get("items") or [],
+        "HSN Codes": fields.get("hsn_codes") or [],
         "Category": guess_category(fields.get("items") or []),
         "Invoice Date": fields.get("invoice_date") or "",
         "Buyer Name": fields.get("buyer_name") or "",

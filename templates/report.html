@@ -11,7 +11,7 @@
 </head>
 <body>
     {%- macro inr(value) -%}₹ {{ "{:,.2f}".format(value) }}{%- endmacro -%}
-    {%- set tone = "var(--bad)" if score > 70 else ("var(--warn)" if score > 40 else "var(--ok)") -%}
+    {%- set tone = "var(--bad)" if score >= 60 else ("var(--warn)" if score >= 20 else "var(--ok)") -%}
 
     <div class="scene" aria-hidden="true">
         <div class="scene__photo"></div>
@@ -42,6 +42,13 @@
                         {{ "Needs manual review" if status == "Suspicious" else "Looks genuine" }}
                         <small>{{ assessment }}</small>
                     </div>
+                    {% if drivers %}
+                    <div class="rows">
+                        {% for label, weight in drivers %}
+                        <div class="row"><span>{{ "Main reason" if loop.first else "Also" }}</span><span>{{ label }}</span></div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                     <form action="/generate-report" method="post" class="actions">
                         <input type="hidden" name="invoice_key" value="{{ invoice_key }}">
                         <button type="submit" class="btn">Download PDF report</button>
@@ -88,10 +95,10 @@
                 <section class="panel glass glass--sheen">
                     <h2>CHECKS</h2>
                     <ul class="checks">
-                        {% for name, passed, detail in checks %}
+                        {% for name, state, detail in checks %}
                         <li>
-                            <span class="dot {{ 'dot--ok' if passed else 'dot--bad' }}" aria-hidden="true">{{ "✓" if passed else "!" }}</span>
-                            <span><strong>{{ name }}</strong> · {{ "passed" if passed else "failed" }}<br>
+                            <span class="dot {{ {'pass': 'dot--ok', 'fail': 'dot--bad'}.get(state, 'dot--skip') }}" aria-hidden="true">{{ {'pass': '✓', 'fail': '!'}.get(state, '–') }}</span>
+                            <span><strong>{{ name }}</strong> · {{ {'pass': 'passed', 'fail': 'failed'}.get(state, 'not checked') }}<br>
                                   <span style="color: var(--ink-soft)">{{ detail }}</span></span>
                         </li>
                         {% endfor %}

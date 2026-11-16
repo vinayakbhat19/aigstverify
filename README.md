@@ -59,7 +59,7 @@ GSTVision AI streamlines the auditing and verification of Indian GST invoices. I
 GSTVision_AI/
 │
 ├── database/        # SQLite database files
-├── models/          # Trained AI/ML models (fraud_model.pkl)
+├── models/          # Trained models (fraud_model.json; layoutlmv3-gst after training)
 ├── reports/         # Generated PDF reports
 ├── static/          # CSS, JS, and image assets
 ├── templates/       # HTML templates for the UI

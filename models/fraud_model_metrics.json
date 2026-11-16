@@ -1,0 +1,75 @@
+{
+  "train_rows": 16000,
+  "test_rows": 4000,
+  "roc_auc": 0.9873,
+  "precision": 0.9483,
+  "recall": 0.9488,
+  "f1": 0.9485,
+  "by_case": {
+    "genuine": {
+      "cases": 1990,
+      "correct": 0.948
+    },
+    "fake_gstin": {
+      "cases": 191,
+      "correct": 0.984
+    },
+    "malformed_gstin": {
+      "cases": 213,
+      "correct": 0.981
+    },
+    "registry_inactive": {
+      "cases": 170,
+      "correct": 1.0
+    },
+    "name_mismatch": {
+      "cases": 163,
+      "correct": 1.0
+    },
+    "inflated_tax": {
+      "cases": 184,
+      "correct": 0.804
+    },
+    "tampered_total": {
+      "cases": 191,
+      "correct": 0.812
+    },
+    "wrong_rate": {
+      "cases": 169,
+      "correct": 0.982
+    },
+    "duplicate": {
+      "cases": 178,
+      "correct": 1.0
+    },
+    "qr_mismatch": {
+      "cases": 184,
+      "correct": 1.0
+    },
+    "bad_date": {
+      "cases": 196,
+      "correct": 0.939
+    },
+    "round_fabricated": {
+      "cases": 171,
+      "correct": 0.947
+    }
+  },
+  "features": [
+    "gstin_missing",
+    "gstin_bad_format",
+    "gstin_bad_checksum",
+    "registry_inactive",
+    "registry_name_mismatch",
+    "rate_mismatch",
+    "total_gap_ratio",
+    "tax_share",
+    "off_slab",
+    "log_total",
+    "duplicate",
+    "qr_mismatch",
+    "future_date",
+    "pre_gst_date",
+    "round_total"
+  ]
+}
