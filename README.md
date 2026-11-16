@@ -86,3 +86,5 @@ scripts/train_layoutlmv3.py  fine-tunes LayoutLMv3 (the alternative extractor)
 - The rate table is a screening aid. The legal rate is the one notified for each HSN/SAC code; unknown items skip the rate check.
 - The QR check compares values but does not verify the e-invoice signature (that needs the portal's public key).
 - Without `GST_API_URL` the registry check reports *Not checked*: the checksum proves a GSTIN is well-formed, not that it is registered.
+- Qwen3-VL-4B reads amounts, dates and invoice numbers well (43–44 of 44 test invoices) but the GSTIN less well (35 of 44): it can drop or swap a character, and occasionally returns the buyer's GSTIN as the seller's. A misread GSTIN is reported as *not checked* rather than as fraud; the buyer/seller mix-up passes the checksum and is not caught.
+- On a CPU the model takes about 100 s per invoice; use a GPU, Apple MPS or Ollama.
