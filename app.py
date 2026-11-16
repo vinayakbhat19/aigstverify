@@ -291,9 +291,12 @@ async def upload_invoice(request: Request, file: UploadFile = File(...)):
         "gst_api": result["gst_api"].get("status", ""),
         "drivers": fraud.get("drivers", []),
         "warnings": fraud.get("warnings", []),
-        "source": {"layoutlmv3": "Local model", "gemini": "Gemini (fallback)",
-                   "layoutlmv3-unverified": "Local model, unverified", "none": "Not read"}.get(source, source),
+        "source": {"vlm": "Qwen3-VL (local)", "vlm-unverified": "Qwen3-VL (local), unverified",
+                   "layoutlmv3": "LayoutLMv3 (local)", "gemini": "Gemini (fallback)",
+                   "layoutlmv3-unverified": "LayoutLMv3 (local), unverified",
+                   "none": "Not read"}.get(source, source),
         "fallback_reasons": data.get("Fallback Reasons", []),
+        "cleanup": data.get("Image Clean-up") or [],
         "seconds": result["seconds"],
     })
 

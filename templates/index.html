@@ -154,8 +154,9 @@
             td.appendChild(tag);
         }
 
-        const sourceLabel = { "layoutlmv3": "Local model", "gemini": "Gemini",
-                              "layoutlmv3-unverified": "Local (unverified)", "none": "Not read" };
+        const sourceLabel = { "vlm": "Qwen3-VL", "vlm-unverified": "Qwen3-VL (unverified)",
+                              "layoutlmv3": "LayoutLMv3", "gemini": "Gemini",
+                              "layoutlmv3-unverified": "LayoutLMv3 (unverified)", "none": "Not read" };
 
         form.addEventListener("submit", async (event) => {
             if (input.files.length <= 1) { busy(true); return; }  // normal post to /upload

@@ -1,9 +1,14 @@
-"""Invoice extraction pipeline: OCR -> LayoutLMv3 -> checks -> Gemini only when needed.
+"""Invoice extraction pipeline.
 
-The local model's answer is accepted when the key fields are present, read
-with enough confidence, the GSTIN checksum holds and the amounts add up.
-Otherwise the invoice is passed to Gemini (if a key is configured), and the
-reasons are recorded either way.
+EXTRACTOR picks how fields are read:
+    vlm        (default) OpenCV clean-up, then a local vision-language model
+               (Qwen3-VL-4B) writes the fields as JSON. No OCR, no fallback.
+    layoutlmv3 OCR (PaddleOCR) -> fine-tuned LayoutLMv3 -> Gemini only when the
+               result is not trusted and GEMINI_API_KEY is set.
+
+Either way the result is reviewed: key fields present, read with enough
+confidence, GSTIN checksum holds, amounts add up. Problems are recorded as
+"Fallback Reasons" and the invoice is marked unverified.
 """
 
 import os
@@ -11,8 +16,9 @@ import re
 import time
 
 from utils import layout_extractor
-from utils.ocr import extract_lines, split_words
 from utils.validator import gstin_checksum_ok
+
+EXTRACTOR = os.getenv("EXTRACTOR", "vlm").lower()
 
 def log(message: str):
     print(f"[pipeline] {message}", flush=True)
@@ -169,9 +175,37 @@ def _gemini_configured() -> bool:
 
 def extract_invoice(image, use_fallback: bool = True):
     """Returns (data, text). data is the app's field dict plus how it was obtained:
-    "Extraction Source" ("layoutlmv3" | "gemini" | "layoutlmv3-unverified"),
-    "Fallback Reasons" and "Field Confidence".
+    "Extraction Source" ("vlm" | "vlm-unverified" | "layoutlmv3" | "gemini" |
+    "layoutlmv3-unverified"), "Fallback Reasons" and "Field Confidence".
     """
+    if EXTRACTOR == "layoutlmv3":
+        return _extract_with_layoutlm(image, use_fallback)
+    return _extract_with_vlm(image)
+
+
+def _extract_with_vlm(image):
+    from utils import vlm_extractor
+
+    problem = vlm_extractor.check_ready()
+    if problem:
+        raise RuntimeError(problem)
+    started = time.perf_counter()
+    result = vlm_extractor.extract_fields(image)
+    log(f"{vlm_extractor.MODEL} ({vlm_extractor.BACKEND}): {time.perf_counter() - started:.1f}s"
+        + (f", image {', '.join(result['preprocessing'])}" if result["preprocessing"] else ""))
+    reasons = review(result)
+    data = to_legacy(result["fields"])
+    data.update({"Extraction Source": "vlm-unverified" if reasons else "vlm",
+                 "Fallback Reasons": reasons,
+                 "Field Confidence": {k: round(v, 3) for k, v in result["confidence"].items()},
+                 "Model": vlm_extractor.MODEL,
+                 "Image Clean-up": result["preprocessing"]})
+    return data, result["raw"]
+
+
+def _extract_with_layoutlm(image, use_fallback: bool = True):
+    from utils.ocr import extract_lines, split_words
+
     started = time.perf_counter()
     lines = extract_lines(image)
     log(f"OCR: {len(lines)} lines in {time.perf_counter() - started:.1f}s")

@@ -15,3 +15,7 @@ pandas
 joblib
 reportlab
 requests
+# Local vision-language model (Qwen3-VL-4B) for field extraction
+torch
+torchvision
+transformers>=4.57

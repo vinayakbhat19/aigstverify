@@ -1,120 +1,88 @@
-# GSTVision AI – Intelligent GST Invoice Verification System
+# GSTVision AI
 
-An advanced AI-powered GST invoice verification and fraud detection system designed to automate compliance checks, extract structured data, and detect anomalies. Built using **FastAPI**, **Google Generative AI (Gemini)**, **Tesseract OCR**, and **Machine Learning**.
+Reads Indian GST invoices on your own machine, checks the GSTIN, works out the
+GST rate, and scores the invoice for fraud. No invoice data leaves the machine
+unless you configure a GSTIN registry API.
 
----
-
-## 🚀 Project Overview
-
-GSTVision AI streamlines the auditing and verification of Indian GST invoices. It leverages a hybrid approach—combining state-of-the-art Large Language Models (LLMs) with robust OCR, regex fallbacks, and Machine Learning models—to identify:
-- Fake or tampered invoices
-- GSTIN format violations and mismatches
-- Tax calculation errors (Subtotal vs Total)
-- Dynamic GST rate anomalies (CGST/SGST/IGST mapping)
-- Fraudulent transaction patterns and duplicate invoices
-
----
-
-## ✨ Key Features
-
-- **📄 Hybrid Invoice Data Extraction**: Uses **Gemini 2.5 Flash/Vision** for structured extraction, augmented by rigorous regex and arithmetic fallback validation to ensure maximum accuracy.
-- **🔍 Smart OCR Augmentation**: Integrates **Tesseract OCR** with automated positional correction logic to fix common character misinterpretations (e.g., digit/letter confusion like O/0, I/1) in GSTINs.
-- **📊 Dynamic GST Rate Detection**: A format-agnostic system that handles varied tax formats (IGST/CGST/SGST) and maps them to standard Indian GST slabs (0%, 3%, 5%, 12%, 18%, 28%).
-- **🧠 ML-Powered Fraud Prediction**: A custom `Scikit-Learn` model evaluates multiple risk vectors (amounts, GST mismatches, duplicates) to generate a concrete fraud probability score.
-- **🏷️ AI-Driven Categorization**: Uses intent mapping for accurate categorical classification of invoices rather than relying on fragile, hard-coded keyword lists.
-- **✅ GSTIN & Amount Validation**: Ensures rigorous statutory compliance and detects mathematical discrepancies.
-- **🧾 PDF Report Generation**: Automatically generates downloadable PDF compliance and risk analysis reports on demand.
-- **⚡ Fast API Backend**: Built with **FastAPI** for asynchronous, high-performance request handling.
-- **🎨 Interactive Dashboard**: A responsive modern UI for uploading invoices and viewing real-time verification results.
-
----
-
-## 🛠️ Tech Stack
-
-### Backend & API
-- **Python 3**
-- **FastAPI** & **Uvicorn**
-- **Jinja2** (Templates)
-
-### AI, ML & Extraction
-- **Google Generative AI (Gemini 2.5 Flash)**
-- **Scikit-learn**, **Pandas**, **NumPy**
-- **Joblib** (Model loading)
-
-### OCR & Image Processing
-- **Tesseract OCR** (`pytesseract`)
-- **Pillow (PIL)**
-
-### Frontend
-- **HTML5**, **CSS3**, **JavaScript**
-
-### Database
-- **SQLite3**
-
----
-
-## 📁 Project Structure
+## How an invoice is processed
 
 ```text
-GSTVision_AI/
-│
-├── database/        # SQLite database files
-├── models/          # Trained models (fraud_model.json; layoutlmv3-gst after training)
-├── reports/         # Generated PDF reports
-├── static/          # CSS, JS, and image assets
-├── templates/       # HTML templates for the UI
-├── uploads/         # Uploaded invoice images
-├── utils/           # Core logic (LLM extraction, validation, ML fraud detection)
-│   ├── llm_extractor.py
-│   ├── ocr.py
-│   ├── fraud.py
-│   ├── amount_validator.py
-│   ├── gst_rate_validator.py
-│   └── ...
-│
-├── app.py           # Main FastAPI application
-├── config.py        # API Keys configuration
-└── README.md        # Project documentation
+image ─► OpenCV clean-up ─► Qwen3-VL-4B (local) ─► fields as JSON ─► checks ─► fraud score ─► report
+         deskew, contrast,    vision-language model    with a confidence    │
+         resize               reads the page            per field            ├─ GSTIN pattern, state code, check character
+                                                                             ├─ GST registry (if an API is configured)
+                                                                             ├─ GST rate for the items (by date and HSN)
+                                                                             ├─ taxable value + GST = total
+                                                                             ├─ duplicate (same number + GSTIN)
+                                                                             └─ e-invoice / UPI QR code vs printed values
 ```
 
----
+1. **OpenCV** straightens a tilted scan, evens out shadows and limits the image size.
+2. **Qwen3-VL-4B-Instruct** (Apache-2.0) reads the image and returns the fields as JSON. It is told to copy values as printed and never calculate them, so a tampered total stays visible to the checks. Each field gets a confidence from the model's own token probabilities.
+3. **Checks** run on the JSON. A check only *fails* when the values behind it were read with confidence ≥ 0.80; otherwise it is reported as *not checked*, so misreads are not called fraud.
+4. **Fraud engine**: an XGBoost model trained on 20,000 generated genuine and fraudulent invoices turns the check results into a risk score. The report shows the main reasons from the model's own per-feature contributions (SHAP values).
+5. **PDF**: built only when you press *Download PDF report*.
 
-## ⚙️ Setup & Installation
+The earlier extractor (PaddleOCR + a fine-tuned LayoutLMv3, with an optional Gemini fallback) is still available with `EXTRACTOR=layoutlmv3`.
 
-### 1. Prerequisites
-- **Python 3.8+** installed on your system.
-- **Tesseract OCR** installed. 
-  - *Windows*: Download from [UB-Mannheim](https://github.com/UB-Mannheim/tesseract/wiki) and ensure it's added to your system `PATH`.
-  - *Linux*: `sudo apt install tesseract-ocr`
-  - *Mac*: `brew install tesseract`
+## Run it
 
-### 2. Clone the Repository
+Python 3.10–3.13 (on a Mac, use Python 3.12: newer versions lack some wheels).
+
 ```bash
-git clone <your-repository-url>
-cd GSTVision_AI
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python -m uvicorn app:app --reload
 ```
 
-### 3. Install Dependencies
-Install the required Python packages (ensure you are in a virtual environment if preferred):
+Open http://localhost:8000. The first invoice downloads the model (about 9 GB) unless you download it first:
+
 ```bash
-pip install fastapi uvicorn google-generativeai pytesseract Pillow scikit-learn pandas numpy python-multipart jinja2
+python -c "from huggingface_hub import snapshot_download; snapshot_download('Qwen/Qwen3-VL-4B-Instruct')"
 ```
 
-### 4. Configuration
-Open `config.py` and add your valid API Keys:
-```python
-GEMINI_API_KEY = "your_gemini_api_key_here"
-GST_API_KEY = "your_gst_api_key_here"
-```
+### Faster on a Mac: Ollama
 
-### 5. Run the Application
-Start the FastAPI server using Uvicorn:
+The Hugging Face model runs on the Apple GPU (MPS) at 16-bit. Ollama runs a 4-bit version, which needs about 3–4 GB of memory and is usually faster on a MacBook Air:
+
 ```bash
-uvicorn app:app --reload --host 0.0.0.0 --port 8000
+ollama pull qwen3-vl:4b
+VLM_BACKEND=ollama python -m uvicorn app:app --reload
 ```
-- Open your browser and navigate to `http://localhost:8000` to access the application.
 
----
+## Settings (environment variables)
 
-## 🤝 Contributing
-Contributions are welcome! Feel free to open an issue or submit a Pull Request if you'd like to improve the extraction logic, enhance the ML models, or build new features.
+| Variable | Default | What it does |
+| --- | --- | --- |
+| `EXTRACTOR` | `vlm` | `vlm` (Qwen3-VL) or `layoutlmv3` (PaddleOCR + LayoutLMv3) |
+| `VLM_BACKEND` | `transformers` | `transformers` or `ollama` |
+| `VLM_MODEL` | `Qwen/Qwen3-VL-4B-Instruct` (`qwen3-vl:4b` for Ollama) | any Qwen3-VL size |
+| `VLM_DEVICE` | auto | `mps`, `cuda` or `cpu` |
+| `VLM_MAX_SIDE` | `1280` | longest image side in pixels; smaller is faster |
+| `EXTRACTION_MIN_CONFIDENCE` | `0.80` | below this a field is not used as fraud evidence |
+| `GST_API_URL`, `GST_API_KEY`, `GST_API_KEY_HEADER` | unset | GSTIN registry lookup through a GSTIN verification provider; `GST_API_URL` contains `{gstin}` |
+| `BATCH_CONCURRENCY` | `1` | invoices processed at once |
+
+## Project layout
+
+```text
+app.py                       FastAPI app: upload, batch upload, report, PDF
+utils/vlm_extractor.py       OpenCV clean-up + Qwen3-VL extraction with per-field confidence
+utils/pipeline.py            chooses the extractor, cleans and reconciles amounts, reviews the result
+utils/validator.py           GSTIN pattern, state code and mod-36 check character
+utils/gst_api.py             GSTIN registry lookup (only when configured)
+utils/gst_rates.py           expected rates by item, HSN chapter and date (22 Sept 2025 rate change)
+utils/qr_validator.py        e-invoice (signed JWT) and UPI QR codes vs printed values
+utils/fraud.py               fraud features, XGBoost scoring, SHAP reasons
+scripts/train_fraud_model.py trains models/fraud_model.json on generated cases
+scripts/generate_invoices.py synthetic annotated GST invoices (for LayoutLMv3 and testing)
+scripts/train_layoutlmv3.py  fine-tunes LayoutLMv3 (the alternative extractor)
+```
+
+## Limits
+
+- The fraud model learns from simulated fraud patterns, not real fraud cases; retrain it with real labelled invoices when you have them.
+- The rate table is a screening aid. The legal rate is the one notified for each HSN/SAC code; unknown items skip the rate check.
+- The QR check compares values but does not verify the e-invoice signature (that needs the portal's public key).
+- Without `GST_API_URL` the registry check reports *Not checked*: the checksum proves a GSTIN is well-formed, not that it is registered.

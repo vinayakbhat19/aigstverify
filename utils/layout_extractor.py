@@ -23,6 +23,7 @@ DATE_FORMATS = ["%d/%m/%Y", "%d-%m-%Y", "%d.%m.%Y", "%d-%b-%Y", "%d-%b-%y", "%d 
 # Characters OCR confuses, by what the GSTIN position must hold.
 _TO_DIGIT = {"O": "0", "Q": "0", "D": "0", "I": "1", "L": "1", "Z": "2", "S": "5", "G": "6", "B": "8"}
 _TO_LETTER = {"0": "O", "1": "I", "2": "Z", "5": "S", "6": "G", "8": "B"}
+_LOOK_ALIKE = {**_TO_DIGIT, **_TO_LETTER}
 
 
 def model_available() -> bool:
@@ -120,6 +121,13 @@ def clean_gstin(text: str) -> str:
     for candidate in candidates:
         if gstin_checksum_ok(candidate):
             return candidate
+    # Positions 13 and 15 may hold a letter or a digit, so a misread there (1 read as I,
+    # 0 as O) still has the right shape. Try look-alike swaps and keep one that passes.
+    for candidate in candidates:
+        for i in (12, 14):
+            swap = _LOOK_ALIKE.get(candidate[i])
+            if swap and gstin_checksum_ok(candidate[:i] + swap + candidate[i + 1:]):
+                return candidate[:i] + swap + candidate[i + 1:]
     return candidates[0] if candidates else ""
 
 

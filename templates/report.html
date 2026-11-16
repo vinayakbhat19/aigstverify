@@ -60,6 +60,7 @@
                     <div class="rows">
                         <div class="row"><span>Fields read by</span><span>{{ source }}</span></div>
                         <div class="row"><span>Time</span><span>{{ seconds.total }} s</span></div>
+                        {% if cleanup %}<div class="row"><span>Image clean-up</span><span>{{ cleanup | join(", ") }}</span></div>{% endif %}
                         <div class="row"><span>GSTIN registry</span><span>{{ gst_api or "Not checked" }}</span></div>
                     </div>
                     {% if fallback_reasons %}
