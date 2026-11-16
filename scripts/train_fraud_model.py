@@ -116,6 +116,12 @@ def extraction_noise(rng, row: dict) -> None:
         row["gstin"] = ""
     if rng.random() < 0.08:
         row["date"] = ""
+    if row["gstin"] and rng.random() < 0.08:
+        # GSTIN misread by the extractor (a character changed or dropped) and flagged
+        # as uncertain, so the checks cannot use it; happens to any invoice.
+        g, i = row["gstin"], rng.randrange(len(row["gstin"]))
+        row["gstin"] = g[:i] + g[i + 1:] if rng.random() < 0.4 else g[:i] + rng.choice("0O1IZ2S5B8") + g[i + 1:]
+        row["gstin_uncertain"] = True
     if row["registry_state"] == "pass" and row["name_match"] is None and rng.random() < 0.5:
         # Registered legal names often differ from the trade name on the bill.
         row["name_match"] = rng.random() < 0.9
@@ -123,6 +129,8 @@ def extraction_noise(rng, row: dict) -> None:
 
 def features_of(row: dict) -> dict:
     gstin_check = validate_gstin(row["gstin"])
+    if row.get("gstin_uncertain") and not gstin_check["valid"]:
+        gstin_check = {**gstin_check, "uncertain": True}
     taxable, gst, total = row["taxable"], row["gst"], row["total"]
     return build_features(gstin_check=gstin_check, registry={"state": row["registry_state"]},
                           rate_check={"state": row["rate_state"]}, taxable=taxable, gst=gst, total=total,

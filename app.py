@@ -174,10 +174,15 @@ async def analyse(image_path: str) -> dict:
     # A failed check is evidence of fraud only if the values behind it were read
     # reliably; otherwise it is far more likely to be a misread.
     gstin_reliable, gstin_conf = read_reliably(data, "vendor_gstin")
-    if not gst_validation["valid"] and not gst_validation["missing"] and not gstin_reliable:
+    # A GSTIN read with the wrong length is almost always a dropped or doubled
+    # character in the reading, which token confidence cannot reveal.
+    gstin_length = len(re.sub(r"\s", "", gstin or ""))
+    wrong_length = gstin_length != 15
+    if not gst_validation["valid"] and not gst_validation["missing"] and (not gstin_reliable or wrong_length):
+        why = (f"the GSTIN was read as {gstin_length} characters" if wrong_length
+               else f"the GSTIN was read with low confidence ({gstin_conf:.2f})")
         gst_validation = {**gst_validation, "uncertain": True,
-                          "message": f"{gst_validation['message']}; but the GSTIN was read with low confidence "
-                                     f"({gstin_conf:.2f}), so compare it with the invoice by eye"}
+                          "message": f"{gst_validation['message']}; but {why}, so compare it with the invoice by eye"}
     amounts_reliable, amounts_conf = read_reliably(data, "taxable_value", "gst_amount", "total_amount")
     total_reliable, _ = read_reliably(data, "total_amount")
     if not amounts_reliable:

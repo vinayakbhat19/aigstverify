@@ -74,8 +74,9 @@ def build_features(*, gstin_check, registry, rate_check, taxable, gst, total, du
     features = {
         "gstin_missing": 1.0 if missing else 0.0,
         "gstin_bad_format": math.nan if unknown else float(not gstin_check.get("format_ok")),
-        "gstin_bad_checksum": math.nan if unknown or not gstin_check.get("format_ok")
-        else float(not gstin_check.get("checksum_ok")),
+        # A malformed GSTIN cannot carry a valid check character either. Keeping NaN
+        # for "could not read it" only lets the model treat a misread as no evidence.
+        "gstin_bad_checksum": math.nan if unknown else float(not gstin_check.get("checksum_ok")),
         "registry_inactive": _flag(registry.get("state")),
         "registry_name_mismatch": math.nan if name_match is None else float(not name_match),
         "rate_mismatch": _flag(rate_check.get("state")),
@@ -132,7 +133,7 @@ def predict_fraud(features: dict, total=0.0, failed_checks=(), missing=()) -> di
                                                 pred_contribs=True)[0][:-1]
     drivers = [(EXPLAIN[name], round(float(value), 2))
                for name, value in sorted(zip(FEATURES, contributions), key=lambda pair: -pair[1])
-               if value > 0.3]
+               if value > 0.3 and not math.isnan(features[name])]  # a check that did not run is no reason
 
     score = int(round(probability * 100))
     status = "Suspicious" if probability >= 0.5 else "Valid"
