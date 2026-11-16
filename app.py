@@ -174,10 +174,10 @@ async def analyse(image_path: str) -> dict:
     # A failed check is evidence of fraud only if the values behind it were read
     # reliably; otherwise it is far more likely to be a misread.
     gstin_reliable, gstin_conf = read_reliably(data, "vendor_gstin")
-    if gst_validation["format_ok"] and not gst_validation["valid"] and not gstin_reliable:
+    if not gst_validation["valid"] and not gst_validation["missing"] and not gstin_reliable:
         gst_validation = {**gst_validation, "uncertain": True,
-                          "message": f"Fails the check character, but the GSTIN was read with low confidence "
-                                     f"({gstin_conf:.2f}): compare it with the invoice by eye"}
+                          "message": f"{gst_validation['message']}; but the GSTIN was read with low confidence "
+                                     f"({gstin_conf:.2f}), so compare it with the invoice by eye"}
     amounts_reliable, amounts_conf = read_reliably(data, "taxable_value", "gst_amount", "total_amount")
     total_reliable, _ = read_reliably(data, "total_amount")
     if not amounts_reliable:
